@@ -8,7 +8,9 @@
 (add-to-list 'package-archives
 	     '("tromey" . "http://tromey.com/elpa/") t)
 (add-to-list 'package-archives
-	     '("melpa" . "http://melpa.milkbox.net/packages/") t)
+	     '("melpa-stable" . "http://stable.melpa.org/packages/") t)
+(add-to-list 'package-archives
+	     '("melpa" . "http://melpa.org/packages/") t)
 
 ;; Load and activate emacs pacakges. Do this first so that the
 ;; packages are loaded before we start to modify them
@@ -30,21 +32,37 @@
     ;; key bindings and highlighting for Clojure
     clojure-mode
     clojure-mode-extra-font-locking
+    cljdoc
 
-    ;; integration with the Clojure REPL
+    ;; Integration with the Clojure REPL
     cider
-
+        
+    ;; autocomplete. q.e.d.
+    auto-complete
+    auto-indent-mode
+    
     ;; colorful parens 
     rainbow-delimiters
-
+    rainbow-mode
+    
     ;; project navigation
     projectile
 
     ;; edit tags like sexps
     tagedit
 
+    ;; Enables context menu popups for autocomplete
+    popup
+
+    ;; Autocomplete to nrepl for the clojure
+    ac-nrepl
+    ac-cider
+
     ;; integration with Git
-    magit))
+    magit
+
+    ;; zenburn theme
+    zenburn-theme))
 
 (dolist (p packages)
   (when (not (package-installed-p p))
@@ -59,11 +77,14 @@
 ;; show line numbers
 (global-linum-mode)
 
+(setq linum-format "%4d \u2502 ")
 ;; highlight matching parens
 (show-paren-mode 1)
 
 ;; highlight current line
 (global-hl-line-mode 1)
+
+;(set-default-font "Anonymous Pro-12")
 
 ;; Turn off the toolbar
 (when (fboundp 'tool-bar-mode)
@@ -73,6 +94,8 @@
 ;; 
 (add-to-list 'custom-theme-load-path "~/.emacs.d/themes")
 (add-to-list 'load-path "~/.emacs.d/themes")
+
+(load-theme 'zenburn t)
 
 (set-face-attribute 'default nil :height 140)
 
@@ -103,8 +126,12 @@
 ;; no bell
 (setq ring-bell-function 'ignore)
 
+(require 'auto-complete-config)
+(setq ac-delay 0.0)
+(setq ac-quick-help-delay 0.5)
+(ac-config-default)
+
 ;; Automatically load paredit when editing a lisp file
-;; 
 (autoload 'enable-paredit-mode "paredit" "Turn on pseudo-structural editing of List code." t)
 (add-hook 'emacs-lisp-mode-hook       #'enable-paredit-mode)
 (add-hook 'eval-expression-minibuffer-setup-hook #'enable-paredit-mode)
@@ -113,6 +140,13 @@
 (add-hook 'scheme-mode-hook           #'enable-paredit-mode)
 (add-hook 'lisp-interaction-mode-hook #'enable-paredit-mode)
 (add-hook 'clojure-mode-hook          #'enable-paredit-mode)
+
+;; NRepl autocomplete
+(require 'ac-nrepl)
+(add-hook 'cider-mode-hook             'ac-nrepl-setup)
+(add-hook 'cider-repl-mode-hook        'ac-nrepl-setup)
+(add-to-list 'ac-modes 'cider-mode)
+(add-to-list 'ac-modes 'cider-repl-mode)
 
 ;; eldoc-mode shows documentation in the minibuffer when writing code
 (add-hook 'emacs-lisp-mode-hook 'turn-on-eldoc-mode)
@@ -143,4 +177,6 @@
 
 ;; rainbows!!!
 ;(global-rainbow-delimiters-mode t)
+(add-hook 'prog-mode-hook 'rainbow-delimiters-mode)
+
 
