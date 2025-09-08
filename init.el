@@ -1,7 +1,14 @@
 ;; init.el --- Howard Logsdon's Emacs Config -*- lexical-binding: t -*-
 
 ;; Copyright © Howard Logsdon
-;; This config targets Emacs 30
+;; This config targets Emacs 30.2
+
+(defun reload-user-init-file ()
+  (interactive)
+  (load-file user-init-file))
+(global-set-key (kbd "<f5>") 'reload-user-init-file)
+(global-set-key (kbd "C-c C-l") 'reload-user-init-file)
+
 
 (add-hook 'emacs-startup-hook
 	  (lambda ()
@@ -14,6 +21,7 @@
 (defun is-macos ()
   (string-equal system-type "darwin"))
 
+(require 'use-package)
 (setq package-archives '(("elpa"         . "https://elpa.gnu.org/packages/")
 			 ("melpa"        . "https://melpa.org/packages/")
 			 ("melpa-stable" . "https://stable.melpa.org/packages/")
@@ -26,46 +34,57 @@
 				   ("nongnu" . 18)
                                    ("melpa-stable" . 15)
                                    ("melpa" . 10)))
-
-(package-initialize)
-
+;(package-initialize)
 (unless (package-installed-p 'use-package)
   (package-refresh-contents)
   (package-install 'use-package))
-(require 'use-package)
-(setq use-package-always-ensure t)
+(eval-and-compile
+  (setq use-package-always-ensure t
+	use-package-expand-minimally t))
 
-(setq package-pinned-packages
-      '(
-	(bind-key . "melpa-stable")
-	(cider . "melpa-stable")
-	(cider-eval-sexp-fu . "melpa-stable")
-	(clojure-mode . "melpa-stable")
-	(clj-refactor . "melpa-stable")
-	(company . "melpa-stable")
-	(consult . "elpa")                       ; https://github.com/emacs-straight/consult
-	(embark . "elpa")                        ; https://elpa.gnu.org/packages//embark.html
-	(embark-consult . "elpa")                ; https://elpa.gnu.org/packages//embark-consult.html
-	(exec-path-from-shell . "nongnu")        ; https://github.com/purcell/exec-path-from-shell/blob/master/README.md
-	(magit . "melpa-stable")                 ; https://magit.vc/
-	(magit-popup . "melpa-stable")
-	(markdown-mode . "melpa-stable")         ; https://jblevins.org/projects/markdown-mode/
-	(marginalia . "elpa" )                   ; https://www.emacswiki.org/emacs/Marginalia
-	(move-text . "melpa-stable")             ; https://github.com/emacsfodder/move-text
-	(no-littering . "melpa-stable")          ; https://github.com/emacscollective/no-littering
-	(orderless . "melpa-stable")             ; https://github.com/oantolin/orderless
-	(org . "org")                            ; https://orgmode.org/
-	(org-plus-config . "org")
-	(paredit . "melpa-stable")
-	(projectile . "melpa-stable")
-	(rainbow-delimiters . "melpa-stable")
-	(timu-macos-theme . "melpa-stable")
-	(use-package . "melpa")
-	(vertico . "melpa-stable")               ; https://github.com/minad/vertico
-	(visual-regexp . "melpa")                ; https://github.com/emacsmirror/visual-regexp
-	(visual-regexp-steroids . "melpa")       ; https://github.com/benma/visual-regexp-steroids.el
-	(vundo . "melpa" )                       ; https://github.com/emacs-straight/vundo
-	))
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(package-pinned-packages
+   '(
+     (bind-key . "melpa-stable")
+     (cider . "melpa-stable")
+     (cider-eval-sexp-fu . "melpa-stable")
+     (clojure-mode . "melpa-stable")
+     (clj-refactor . "melpa-stable")
+     (company . "melpa-stable")
+     (consult . "elpa")                       ; https://github.com/emacs-straight/consult
+     (embark . "elpa")                        ; https://elpa.gnu.org/packages//embark.html
+     (embark-consult . "elpa")                ; https://elpa.gnu.org/packages//embark-consult.html
+     (exec-path-from-shell . "nongnu")        ; https://github.com/purcell/exec-path-from-shell/blob/master/README.md
+     (magit . "melpa-stable")                 ; https://magit.vc/
+     (magit-popup . "melpa-stable")
+     (markdown-mode . "melpa-stable")         ; https://jblevins.org/projects/markdown-mode/
+     (marginalia . "elpa" )                   ; https://www.emacswiki.org/emacs/Marginalia
+     (move-text . "melpa-stable")             ; https://github.com/emacsfodder/move-text
+     (no-littering . "melpa-stable")          ; https://github.com/emacscollective/no-littering
+     (orderless . "melpa-stable")             ; https://github.com/oantolin/orderless
+     (org . "org")                            ; https://orgmode.org/
+     (org-plus-config . "org")
+     (paredit . "melpa-stable")
+     (projectile . "melpa-stable")
+     (rainbow-delimiters . "melpa-stable")
+     (timu-macos-theme . "melpa-stable")
+     (use-package . "melpa")
+     (vertico . "melpa-stable")               ; https://github.com/minad/vertico
+     (visual-regexp . "melpa")                ; https://github.com/emacsmirror/visual-regexp
+     (visual-regexp-steroids . "melpa")       ; https://github.com/benma/visual-regexp-steroids.el
+     (vundo . "melpa" )                       ; https://github.com/emacs-straight/vundo
+     )))
+
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )
 
 (use-package org
   :pin org
@@ -73,6 +92,15 @@
   :init
   (setq org-directory "~/org"))
 
+(use-package auto-package-update
+  :custom
+  (auto-package-update-interval 7)
+  (auto-package-update-prompt-before-update t)
+  (auto-package-update-hide-result f)
+  :config
+  (auto-package-update-maybe)
+  (auto-package-update-at-time "09:00"))
+  
 (use-package bind-key)
 
 (when (is-macos)
@@ -248,8 +276,8 @@
 
 (use-package yaml-mode)
 (use-package hcl-mode)
-(use-package dockerfile-mode)
 (use-package terraform-mode)
+(use-package dockerfile-mode)
 
 (use-package clj-refactor
   :after (cider)
