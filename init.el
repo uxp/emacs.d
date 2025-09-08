@@ -1,40 +1,40 @@
-;; init.el --- Howard Logsdon's Emacs Config -*- lexical-binding: t -*-
+;; init.el --- -*- lexical-binding: t -*-
 
-;; Copyright © Howard Logsdon
-;; This config targets Emacs 30.2
+;; This config targets Emacs 29.4.1
+;; Written by hplogsdon (https://gitlab.com/hplogdon/dotfiles)
 
-(defun reload-user-init-file ()
-  (interactive)
-  (load-file user-init-file))
-(global-set-key (kbd "<f5>") 'reload-user-init-file)
-(global-set-key (kbd "C-c C-l") 'reload-user-init-file)
+;; Produce backtraces on error: helpful for startup issues
+(setq debug-on-error t)
 
+(let ((minver "29.1"))
+  (when (version< emacs-version minver)
+	(error "Emacs is too old.")))
 
-(add-hook 'emacs-startup-hook
-	  (lambda ()
-	    (message "Emacs ready in %s with %d garbage collections"
-		     (format "%.2f seconds"
-			     (float-time
-			      (time-subtract after-init-time before-init-time)))
-		     gcs-done)))
+(add-to-list 'load-path (expand-file-name "lisp" user-emacs-directory))
+(require 'init-benchmarking)
+
 
 (defun is-macos ()
   (string-equal system-type "darwin"))
 
+(defun reload-user-init-file ()
+  (interactive)
+  (load-file user-init-file))
+
 (require 'use-package)
-(setq package-archives '(("elpa"         . "https://elpa.gnu.org/packages/")
-			 ("melpa"        . "https://melpa.org/packages/")
-			 ("melpa-stable" . "https://stable.melpa.org/packages/")
-			 ("org"          . "https://orgmode.org/elpa/")
-			 ("gnu"          . "https://elpa.gnu.org/packages/")
-			 ("nongnu"       . "https://elpa.nongnu.org/nongnu/"))
-      package-archive-priorities '(("elpa" . 30)
-                                   ("nongnu" . 25)
-				   ("org" . 20)
-				   ("nongnu" . 18)
-                                   ("melpa-stable" . 15)
-                                   ("melpa" . 10)))
-;(package-initialize)
+(setq package-archives '(("melpa-stable" . "https://stable.melpa.org/packages/")
+						 ("melpa"        . "https://melpa.org/packages/")
+						 ("orgmode"      . "https://orgmode.org/elpa/")
+						 ("nongnu"       . "https://elpa.nongnu.org/nongnu/")
+						 ("gnu"          . "https://elpa.gnu.org/packages/")
+						 ("tromey"       . "https://tromey.com/elpa/"))
+      package-archive-priorities '(("melpa-stable" . 30)
+								   ("orgmode"      . 30)
+                                   ("nongnu"       . 20)
+								   ("gnu"          . 10)
+								   ("tromey"       . 10)
+                                   ("melpa"        . 0)))
+
 (unless (package-installed-p 'use-package)
   (package-refresh-contents)
   (package-install 'use-package))
@@ -47,37 +47,43 @@
  ;; If you edit it by hand, you could mess it up, so be careful
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(package-pinned-packages
-   '(
-     (bind-key . "melpa-stable")
-     (cider . "melpa-stable")
-     (cider-eval-sexp-fu . "melpa-stable")
-     (clojure-mode . "melpa-stable")
-     (clj-refactor . "melpa-stable")
-     (company . "melpa-stable")
-     (consult . "elpa")                       ; https://github.com/emacs-straight/consult
-     (embark . "elpa")                        ; https://elpa.gnu.org/packages//embark.html
-     (embark-consult . "elpa")                ; https://elpa.gnu.org/packages//embark-consult.html
-     (exec-path-from-shell . "nongnu")        ; https://github.com/purcell/exec-path-from-shell/blob/master/README.md
-     (magit . "melpa-stable")                 ; https://magit.vc/
-     (magit-popup . "melpa-stable")
-     (markdown-mode . "melpa-stable")         ; https://jblevins.org/projects/markdown-mode/
-     (marginalia . "elpa" )                   ; https://www.emacswiki.org/emacs/Marginalia
-     (move-text . "melpa-stable")             ; https://github.com/emacsfodder/move-text
-     (no-littering . "melpa-stable")          ; https://github.com/emacscollective/no-littering
-     (orderless . "melpa-stable")             ; https://github.com/oantolin/orderless
-     (org . "org")                            ; https://orgmode.org/
-     (org-plus-config . "org")
-     (paredit . "melpa-stable")
-     (projectile . "melpa-stable")
-     (rainbow-delimiters . "melpa-stable")
-     (timu-macos-theme . "melpa-stable")
-     (use-package . "melpa")
-     (vertico . "melpa-stable")               ; https://github.com/minad/vertico
-     (visual-regexp . "melpa")                ; https://github.com/emacsmirror/visual-regexp
-     (visual-regexp-steroids . "melpa")       ; https://github.com/benma/visual-regexp-steroids.el
-     (vundo . "melpa" )                       ; https://github.com/emacs-straight/vundo
-     )))
+ '(package-selected-packages
+   '(auto-package-update
+	 bind-key
+	 cider
+	 cider-eval-sexp-fu
+	 clojure-mode
+	 clj-refactor
+	 company
+	 consult                                  ; https://github.com/emacs-straight/consult
+	 dockerfile-mode
+	 eldoc
+	 embark                                   ; https://elpa.gnu.org/packages//embark.html
+	 embark-consult
+	 exec-path-from-shell
+	 magit
+	 magit-popup
+	 marginalia
+	 markdown-mode
+	 monokai-pro-theme
+	 move-text
+     no-littering
+     orderless
+     org
+	 org-journal
+	 org-plus-config
+     ox-jekyll-md
+	 paredit
+	 projectile
+	 pyenv-mode
+	 rainbow-delimiters
+	 terraform-mode
+	 vertico
+	 visual-regexp
+	 visual-regexp-steroids
+	 vundo
+	 yaml-mode
+	 yasnippet)))
 
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
@@ -86,11 +92,71 @@
  ;; If there is more than one, they won't work right.
  )
 
+(use-package emacs
+  :custom
+  (menu-bar-mode nil)                            ;; Disable the menu bar
+  (scroll-bar-mode nil)                          ;; Disable the scroll bar
+  (tool-bar-mode nil)                            ;; Disable the tool bar
+  (inhibit-startup-screen t)                     ;; Disable the welcome screen
+
+  (delete-selection-mode t)                      ;; Select text and delete it by typing
+  (electric-pair-mode t)                         ;; Turn on auto-paren pairing
+
+  (blink-cursor-mode nil)                        ;; dont blink cursor/point
+  (global-auto-revert-mode t)                    ;; Automatically reload file if modified externally
+  
+  (dired-kill-when-opening-new-dired-buffer t)   ;; Dired don't create new buffer
+  (recentf-mode t)                               ;; enable recent file mode
+
+  (global-visual-line-mode t)                    ;; Enable truncated loines
+  (display-line-numbers-type 'relative)          ;; Relative line numbers
+  (global-display-line-numbers-mode t)           ;; Display line numbers
+
+  ;;(mouse-wheel-progressive-speed nil)            ;; Disable progressive speed when scrolling
+  (scroll-conservatively 10)                     ;; Smooth scrolling
+  ;;(scroll-margin 8)
+
+  (tab-width 4)                                  ;; Space is cheap. expand tabs to 4
+
+  (make-backup-files nil)                        ;; Stop creating ~ backup files
+  (auto-save-default nil)                        ;; Stop creating # autosave files
+
+  :hook
+  (prog-mode . (lambda () (hs-minor-mode t)))    ;; Enable Folding hide/show globally
+
+  :config
+  ;; Move custom variables to a separate file and load it. Avoids filling up init.el with unneccessary variables
+  (setq custom-file (locate-user-emacs-file "custom.el"))
+  (load custom-file 'noerror 'nomessage)         ;; load the custom vars (swallow errors)
+
+  :bind (("s-=" . text-scale-increase)           ;; Zoom in/out
+	 ("s--" . text-scale-decrease)
+	 ("<f5>" . reload-user-init-file)        ;; f5 reloads this file
+	 ("C-c C-l" . reload-user-init-file)))
+
+
 (use-package org
-  :pin org
+  :pin orgmode
   :ensure nil
   :init
-  (setq org-directory "~/org"))
+  (setq org-directory "~/org")
+  :hook
+  (org-mode . org-indent-mode) ;; indent text
+  :custom
+  (org-edit-src-indentation 4)  ;; set src block autoindent to 4, not 2
+  (org-return-follows-link t)   ;; sets RETURN key in org-mode to follow links
+  )
+
+(use-package org-journal
+  :pin melpa-stable
+  :ensure t
+  :defer t
+  :bind
+  (("C-c C-j" . org-journal-new-entry))
+  :init
+  (setq org-journal-prefix-key "C-c j")
+  :config
+  (setq org-journal-dir "~/org/journal"))
 
 (use-package auto-package-update
   :custom
@@ -112,9 +178,6 @@
    mac-right-option-modifier 'meta
    mac-right-option-modifier 'nil))
 
-(global-set-key (kbd "s-=") 'text-scale-increase)
-(global-set-key (kbd "s--") 'text-scale-decrease)
-
 (use-package exec-path-from-shell
   :demand
 
@@ -131,10 +194,10 @@
   (setq auto-save-file-name-transforms
 	`((".*" ,(no-littering-expand-var-file-name "auto-save/") t))))
 
-(use-package timu-macos-theme
+(use-package monokai-pro-theme
   :ensure t
   :config
-  (load-theme 'timu-macos t))
+  (load-theme 'monokai-pro t))
 
 (use-package orderless
   :custom
@@ -213,67 +276,22 @@
   :hook ((clojure-mode . paredit-mode)))
 
 (use-package projectile
-  :init
-  (setq projetile-create-missing-test-files t)
-  (setq projectile-project-search-path '("~/src"))
+  :custom
+  (projectile-create-missing-test-files t)              ;;
+  (projectile-run-use-comint-mode t)                    ;; Interactive run dialog when running projects inside emacs
+  (projectile-project-search-path '("~/src" . 1))       ;; . 1 means to search only 1st subdir for projects
   :config
   (projectile-global-mode))
 
-(use-package magit)
-
-(use-package markdown-mode
+(use-package magit
+  :defer
+  :custom
+  (magit-diff-refine-hunk (:quote all))  ;; Shows inline diff
   :config
-  (defun markdown-display-inline-images ()
-    "Add inline image overlays to image links in the buffer.
-    This can be toggled with `markdown-toggle-inline-images`
-    or \\[markdown-toggle-inline-images]."
-    (interactive)
-    (unless (display-images-p)
-      (error "Cannot show images"))
-    (save-excursion
-      (save-restriction
-        (widen)
-        (goto-char (point-min))
-        (while (re-search-forward markdown-regex-link-inline nil t)
-               (let* ((start match-beginning 0))
-                 (imagep (match-beginning 1))
-                 (end (match-end 0))
-                 (file (funcall markdown-translate-filename-function (match-string-no-properties 6))))
-               (when (and imagep
-                          (not (zerop (length file)))))
-               (let* ((download-file (funcall markdown-translate-filename-function file))
-                      (valid-url (ignore-errors
-                                   (member (downcase (url-type (url-generic-parse-url download-file)))
-                                           markdown-remote-image-protocols))))
-                 (if (and markdown-display-remote-images valid-url)
-                   (setq file (markdown--get-remote-iamge download-file))
-                   (when (not valid-url)
-                     ;; strip query params
-                     (setq file (replace-regexp-in-string "?.+\\'" "" file))
-                     (unless (file-exists-p file)
-                       (setq file (url-unhex-string file)))))))
-        (when (file-exists-p file)
-          (let* ((abspath (if (file-name-absolute-p file)
-                            file
-                            (concat default-directory file)))
-                 (image
-                   (cond ((and markdown-max-image-size
-                               (image-type-available-p 'imagemagik))
-                          (create-image
-                            abspath 'imagemagik nil
-                            :max-width (car markdown-max-image-size)
-                            :max-height (cdr markdown-max-image-size)))
-                         (markdown-max-image-size
-                           (create-image abspath nil nil
-                                         :max-width (car markdown-max-image-size)
-                                         :max-height (cdr markdown-max-image-size)))
-                         (t (create-image abspath)))))
-            (when image
-              (let ((ov (make-overlay start end)))
-                (overlay-put ov 'display image)
-                (overlay-put ov 'face 'default)
-                (push ov markdown-inline-image-overlays)))))))))
+  (define-key transient-map (kbd "<escape>") 'transient-quit-one)  ;; <esc> quits magit prompts
+  )
 
+(use-package markdown-mode)
 (use-package yaml-mode)
 (use-package hcl-mode)
 (use-package terraform-mode)
@@ -292,6 +310,9 @@
           clojurescript-mode-hook
           clojurec-mode-hook
           clojure-mode-hook) . clj-refactor-mode))
+
+(use-package clojure-mode
+  :ensure t)
 
 (with-eval-after-load 'clojure-mode
   (with-current-buffer (get-buffer-create "*scratch-clj*")
@@ -342,5 +363,14 @@
 	       t))
 
 (use-package vundo)
+
+(use-package yasnippet
+  :ensure t
+  :hook ((text-mode
+		  prog-mode
+		  conf-mode
+		  snippet-mode) . yas-minor-mode-on)
+  :init
+  (setq yas-snippet-dir "~/.emacs.d/snippets"))
 
 (provide 'init)
