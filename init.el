@@ -4,7 +4,7 @@
 ;; Written by hplogsdon (https://gitlab.com/hplogdon/dotfiles)
 
 ;; Produce backtraces on error: helpful for startup issues
-(setq debug-on-error t)
+;;(setq debug-on-error t)
 
 (let ((minver "29.1"))
   (when (version< emacs-version minver)
