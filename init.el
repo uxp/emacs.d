@@ -115,8 +115,6 @@
 
 (require 'init-whitespace)
 
-(require 'init-example)
-
 (require 'init-version-control)
 
 (require 'init-git)
@@ -126,6 +124,10 @@
 (require 'init-gitlab)
 
 (require 'init-projectile)
+
+(require 'init-paredit)
+
+(require 'init-lisp)
 
 (require 'init-terminal)
 
