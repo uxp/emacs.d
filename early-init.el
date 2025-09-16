@@ -1,10 +1,19 @@
-;; early-init.el --- -*- lexical-binding: t -*-
+;;; early-init.el --- Emacs 27+ pre-init config -*- lexical-binding: t -*-
 
-;; Documentation: (info "(emacs) Early Init File")
-;;                (info "(emacs) Package Installation")
+;;; Documentation: (info "(emacs) Early Init File")
+;;;                (info "(emacs) Package Installation")
+;;; Commentary:
 
-;; Unless 'package-enable-at-startup' is set to 'nil', Emacs will automatically
-;; activate all installed packages after early-init.el but before init.el
+;; Emacs 27+ loads this file before (normally) calling
+;; `package-initialize'. We use this file to suppress that automatic
+;; behavior so that startup is consistent across Emacs versions.
+;;
+;; We set 'package-enable-at-startup' to 'nil' so that Emacs will not
+;; automatically activate all installed packages before init.el (but
+;; after reading this early-init.el)
+
+;;; Code:
+(setq package-enable-at-startup nil)
 
 (setq tool-bar-mode nil
       menu-bar-mode t)
