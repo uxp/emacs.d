@@ -1,3 +1,5 @@
+(require 'init-example)
+
 ;; init.el --- -*- lexical-binding: t -*-
 
 ;; This config targets Emacs 30
@@ -69,8 +71,6 @@
 
 (require 'init-preload-local)
 
-(require 'init-example)
-
 (require 'init-frame-hooks)
 
 (require 'init-xterm)
@@ -101,6 +101,8 @@
 
 (require 'init-minibuffer)
 
+(require 'init-movement)
+
 (require 'init-hippy-expand)
 
 (require 'init-corfu)
@@ -124,6 +126,8 @@
 (require 'init-gitlab)
 
 (require 'init-projectile)
+
+(require 'init-orgmode)
 
 (require 'init-paredit)
 
