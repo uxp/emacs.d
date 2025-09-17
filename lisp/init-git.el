@@ -36,7 +36,3 @@
 		;;magit-completing-read-function 'ivy-completing-read
 		;;magit-push-always-verify nil
 		magit-repository-directories '("~/src/"))
-
-
-(provide 'init-git)
-;;; init-git.el ends here

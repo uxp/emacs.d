@@ -87,9 +87,7 @@ LOAD-DURATION is the time taken in milliseconds to load FEATURE.")
   (message "init completed in %.2fms"
 		   (sanityinc/time-subtract-millis after-init-time before-init-time)))
 
-(add-hook 'after-init-hook 'sanityinc/show-init-time)  
-
-;;; benchmarking ends here
+(add-hook 'after-init-hook 'sanityinc/show-init-time)
 ;; Benchmarking:1 ends here
 
 ;; [[file:../Emacs.org::*Helper functions][Helper functions:1]]
@@ -109,7 +107,7 @@ LOAD-DURATION is the time taken in milliseconds to load FEATURE.")
   (let ((this-init-file "~/.emacs.d/init.el"))
 	(find-file this-init-file)))
 
-(bind-key "C-c l" 'hplogsdon/reload-init-file)
+(bind-key "C-c l" 'hplogsdon/reload-user-init-file)
 
 ;; Adjust garbage collection threshold for early startup (see gcmh below)
 (setq gc-cons-threshold (* 128 1024 1024))
@@ -216,9 +214,6 @@ BUFFER and ALIST are as for `display-buffer-full-frame'."
           (rename-file filename new-name 1))
         (set-visited-file-name new-name)
         (rename-buffer new-name)))))
-
-
-;;; utils ends here
 ;; Helper functions and commands:1 ends here
 
 ;; [[file:../Emacs.org::*Lisp directory (aka, `vendor')][Lisp directory (aka, `vendor'):1]]
@@ -271,10 +266,6 @@ BUFFER and ALIST are as for `display-buffer-full-frame'."
 under ~/.emacs.d/site-lisp/NAME"
   (let ((f (locate-library (symbol-name name))))
     (and f (string-prefix-p (file-name-as-directory (site-lisp-dir-for name)) f))))
-
-
-(provide 'init-site-lisp)
-;;; init-site-lisp.el ends here
 ;; Lisp directory (aka, `vendor'):1 ends here
 
 ;; [[file:../Emacs.org::*ELPA / Package config][ELPA / Package config:1]]
@@ -300,27 +291,38 @@ under ~/.emacs.d/site-lisp/NAME"
                                    ("tromey"       . 20)
                                    ("gnu"          .  0)
                                    ("melpa"        .  0)))
-
-;;; elpa ends here
 ;; ELPA / Package config:1 ends here
 
 ;; [[file:../Emacs.org::*Exec Path][Exec Path:1]]
 ;;; --- Setup exec-path to help Emacs find packages
 
-(use-package exec-path-from-shell)
-
 (when (or (memq window-system '(mac ns x pgtk))
           (unless (memq system-type '(ms-dos windows-nt))
             (daemonp)))
-  (use-package exec-package-with-shell
+  (use-package exec-path-from-shell
     :ensure t
     :config
     (exec-path-from-shell-initialize)
     (dolist (var '("SSH_AUTH_SOCK" "SSH_AGENT_PID" "GPG_AGENT_INFO" "LANG" "LC_CTYPE" "NIX_SSL_CERT_FILE" "NIX_PATH"))
       (add-to-list 'exec-path-from-shell-variables var))))
-
-;;; exec-path ends here
 ;; Exec Path:1 ends here
+
+;;; --- Performance tuning
+
+;; General performance tuning with the Garbage Collector Magic Hack
+(use-package gcmh
+  :ensure t
+  :demand t
+  :diminish
+  :delight
+  :config
+  (gcmh-mode 1)
+  :init
+  (setq gcmh-idle-delay 'auto)
+  (setq gcmh-auto-idle-delay-factor 10)
+  (setq gcmh-high-cons-threshold (* 128 1024 1024)))
+
+(setq jit-lock-defer-time 0)
 
 ;;; --- Day-to-Day editing helpers
 
@@ -331,10 +333,24 @@ under ~/.emacs.d/site-lisp/NAME"
 			  (when (called-interactively-p 'interactive)
 				(unless mark-active
 				  (setq args (list (line-beginning-position)
-								   (line-beginning-position 2)))))))  
+								   (line-beginning-position 2)))))))
 
+;;; --- Github integration
 
-;;; editing-utils ends here
+;; yagist
+;; (use-package yagist)
+
+;; github-clone
+;; (use-package github-clone)
+
+;; github-review
+;; (use-package github-review)
+
+;; todo: flymake-actionlint
+;; todo: forge
+;; todo: bug-reference-github
+
+;;; --- Gitlab Integration
 
 ;; [[file:../Emacs.org::*orgmode][orgmode:1]]
 ;;; --- Org Mode Configuration
@@ -391,11 +407,6 @@ under ~/.emacs.d/site-lisp/NAME"
   (defun org-journal-today ()
 	(interactive)
 	(org-journal-new-entry t)))
-
-
-
-(provide 'init-orgmode)
-;;; init-orgmode.el ends here
 ;; orgmode:1 ends here
 
 ;;; --- Paredit mode
@@ -436,15 +447,12 @@ under ~/.emacs.d/site-lisp/NAME"
 		 (clojure-mode          . enable-paredit-mode)
 		 (cider-repl-mode       . enable-paredit-mode)
 		 (lisp-interaction-mode . enable-paredit-mode)
-		 (ielm-mode             . enable-paredit-mode))
+		 (ielm-mode             . enable-paredit-mode)))
 
-  ;; Paredit Everywhere
-  ;; (use-package paredit-everywhere
-  ;;   :ensure t
-  ;;   :hook ((prog-mode . paredit-everywhere-mode)))
-
-
-;;; paredit ends here
+;; Paredit Everywhere
+;; (use-package paredit-everywhere
+;;   :ensure t
+;;   :hook ((prog-mode . paredit-everywhere-mode)))
 
 ;; [[file:../Emacs.org::*Footer][Footer:1]]
 ;; Allow access from emacsclient 

@@ -27,4 +27,3 @@ Selectively runs either `after-make-console-frame-hooks' or
 
 
 (provide 'init-frame-hooks)
-;;; init-frame-hooks.el ends here

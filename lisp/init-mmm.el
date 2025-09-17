@@ -34,7 +34,3 @@
   ;;                              :back "%=%"
   ;;                              :end-not-begin t)))
 )
-
-
-(provide 'init-mmm)
-;;; init-mmm.el ends here
