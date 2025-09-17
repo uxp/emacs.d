@@ -488,13 +488,13 @@ Selectively runs either `after-make-console-frame-hooks' or
   "*Put symbol at current point into search string."
   (interactive)
   (let ((sym (thing-at-point 'symbol)))
-	(if sym
-		(progn
-		  (setq isearch-regexp t
-				isearch-string (concat "\\_<" (regexp-quote sym) "\\_>")
-				isearch-message (mapconcat 'isearch-text-char-description isearch-string "")
-				isearch-yank-flag t))
-	  (ding)))
+    (if sym
+	(progn
+	  (setq isearch-regexp t
+		isearch-string (concat "\\_<" (regexp-quote sym) "\\_>")
+		isearch-message (mapconcat 'isearch-text-char-description isearch-string "")
+		isearch-yank-flag t))
+      (ding)))
   (isearch-search-and-update))
 
 
@@ -502,8 +502,7 @@ Selectively runs either `after-make-console-frame-hooks' or
   :bind
   (("C-c r"    . isearch-forward-regexp)
    ("C-r"      . isearch-backward-regexp)
-   ("C-c s"    . isearch-forward-symbol)
-   ("C-s"      . isearch-backwards-symbol)
+   ("C-c s"    . isearch-forward-symbol-at-point)
    ("C-c o"    . sanityinc/isearch-occur)
    ("C-c C-o"  . sanityinc/isearch-occur)
    :map isearch-mode-map
@@ -632,6 +631,37 @@ This is useful when followed by an immediate kill."
   :config (add-to-list 'xref-prompt-for-identifier #'xref-find-references 'append)
   :custom
   (xref-auto-jump-to-first-xref t))
+
+;;; --- LSP Support via eglot
+
+(use-package eglot
+  :after (:all xref)
+  :hook (;(prog-mode      . eglot-ensure)
+	 (python-mode    . eglot-ensure)
+	 (python-ts-mode . eglot-ensure)
+	 (clojure-mode   . eglot-ensure))
+;; turn off custom binds for now
+;;:bind (:map eglot-mode-map
+;;       ("C-c l c" . eglot-connect)
+;;       ("C-c l d" . flymake-show-buffer-diagnostics)
+;;       ("C-c l r" . eglot-rename)
+;;       ("C-c l f" . eglot-format)
+;;       ("C-c l F" . eglot-format-buffer)
+;;       ("C-c l l" . eglot)
+;;       ("C-c l i" . eglot-inlay-hints-mode)
+;;       ("C-c l s" . eglot-shutdown)
+;;       ("C-c l C" . eglot-code-actions))
+  
+  :custom
+  (eglot-autoshutdown t)
+  (eglot-send-changes-idle-time 0.1)
+
+  :config
+  (add-to-list 'eglot-server-programs
+	       '((c++-mode c-mode) "clangd"))
+  ;; Python w/ pyright
+  (add-to-list 'eglot-server-programs
+	       '(python-mode . ("pyright-langserver" "--stdio"))))
 
 ;;; --- Settings for tracking recent files
 
