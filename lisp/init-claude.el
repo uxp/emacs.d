@@ -1,6 +1,4 @@
-;;; init-claude.el --- Example -*- lexical-binding: t -*-
-;;; Commentary:
-;;; Code:
+;;; --- Anthropic Claude Code
 
 (use-package claude-code
   :ensure t
@@ -14,7 +12,4 @@
   ;;(setq claude-code-terminal-backend 'eat)
 
   :bind-keymap
-  ("C-c C" . claude-code-command-mode)
-
-(provide 'init-claude)
-;;; init-claude.el ends here
+  ("C-c C" . claude-code-command-mode))

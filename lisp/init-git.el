@@ -35,4 +35,4 @@
 		;;magit-section-visibility-indicator nil
 		;;magit-completing-read-function 'ivy-completing-read
 		;;magit-push-always-verify nil
-		magit-repository-directories '("~/src/"))
+		magit-repository-directories '("~/src/")))

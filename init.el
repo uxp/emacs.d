@@ -395,9 +395,6 @@ Selectively runs either `after-make-console-frame-hooks' or
                   (run-after-make-frame-hooks sanityinc/initial-frame))))
 
 ;;; --- Integrate with terminals such as xterm
-;;; Commentary:
-;;; Code:
-(require 'init-frame-hooks)
 
 (global-set-key [mouse-4] (lambda () (interactive) (scroll-down 1)))
 (global-set-key [mouse-5] (lambda () (interactive) (scroll-up 1)))
@@ -454,7 +451,7 @@ Selectively runs either `after-make-console-frame-hooks' or
 
 ;;; --- Non-TTY frames behavior
 
-;; Stop C-z frome 
+;; Stop C-z frame
 (defun sanityinc/maybe-suspend-frame ()
   (interactive)
   (unless (and *is-macos* window-system)
@@ -475,16 +472,14 @@ Selectively runs either `after-make-console-frame-hooks' or
 
 (when (fboundp 'tool-bar-mode)
   (tool-bar-mode -1))
-(when (fboundp 'set-scroll-bar-mode)
-  (set-scroll-bar-mode nil))
+(when (fboundp 'set-scroll-mode)
+  (set-scroll-mode nil))
 
 (menu-bar-mode -1)
 
 ;;; --- Dired customization
 
 (defun hplogsdon/dired-open-externally ()
-  "In dired, open marked files in external application.
-If more than 5 files are marked, ask for confirmation first." 
   (interactive)
   (let* ((file-list (dired-get-marked-files))
          (proceed-p (if (<= (length file-list) 5)
@@ -510,8 +505,7 @@ If more than 5 files are marked, ask for confirmation first."
 (defun hplogsdon/dired-mode-defaults ()
   "Configure the dired-mode buffer."
   (dired-omit-mode 1)
-  (dired-hide-details-mode)
-  (diff-hl-dired-mode))
+  (dired-hide-details-mode))
 
 
 (use-package dired
@@ -560,21 +554,21 @@ If more than 5 files are marked, ask for confirmation first."
   :ensure t
   :after (dired)
   :hook ((prog-mode  . diff-hl-mode)
-		     (dired-mode . diff-hl-dired-mode)
-		     (after-init . global-diff-hl-mode))
+         (dired-mode . diff-hl-dired-mode)
+         (after-init . global-diff-hl-mode))
   :init
   (defconst hplogsdon/diff-hl-mode-hooks '(emacs-lisp-mode-hook
-										   conf-space-mode-hook ; .tmux.conf
-										   markdown-mode-hook
-										   css-mode-hook
-										   web-mode-hook
-										   sh-mode-hook
-										   python-mode-hook
-										   yaml-mode-hook ; tmuxp yaml configs
-										   c-mode-hook)
+                                           conf-space-mode-hook ; .tmux.conf
+                                           markdown-mode-hook
+                                           css-mode-hook
+                                           web-mode-hook
+                                           sh-mode-hook
+                                           python-mode-hook
+                                           yaml-mode-hook ; tmuxp yaml configs
+                                           c-mode-hook)
 	"List of hook of major modes in which `diff-hl-mode' should be enabled.")
   (dolist (hook hplogsdon/diff-hl-mode-hooks)
-	  (add-hook hook #'diff-hl-flydiff-mode))
+    (add-hook hook #'diff-hl-flydiff-mode))
   
   :config
   (with-eval-after-load 'magit
@@ -585,7 +579,7 @@ If more than 5 files are marked, ask for confirmation first."
   (diff-hl-disable-on-remote t)
   (diff-hl-margin-symbols-alist
    '((insert . " ")
-	   (delete . " ")
+     (delete . " ")
      (change . " ")
      (unknown . "?")
      (ignored . "i"))))
@@ -596,17 +590,17 @@ If more than 5 files are marked, ask for confirmation first."
 
 (use-package vc
   :bind (("C-x v =" . hplogsdon/vc-diff)
-		     ("C-x v H" . vc-region-history)) ;; new command in emacs 25.x
+		 ("C-x v H" . vc-region-history)) ;; new command in emacs 25.x
   :config
   (defun hplogsdon/vc-diff (no-whitespace)
-	"Call `vc-diff' as usual if buffer is not modified.
+	  "Call `vc-diff' as usual if buffer is not modified.
   If the buffer is modified (yet to be saved, dirty) call
   `diff-buffer-with-file'. If NO-WHITESPACE is non-nill, ignore
   all whitespace when doing diff."
-	(interactive "P")
-	(let* ((no-ws-switch '("-w"))
-		   (vc-git-diff-switches (if no-whitespace
-									 no-ws-switch
+	  (interactive "P")
+	  (let* ((no-ws-switch '("-w"))
+		     (vc-git-diff-switches (if no-whitespace
+			  					 no-ws-switch
 								   vc-git-diff-switches))
 		   (vc-diff-switches (if no-whitespace
 								 no-ws-switch
@@ -662,8 +656,8 @@ If more than 5 files are marked, ask for confirmation first."
   (org-agenda-window-setup 'other-window)
   (org-babel-load-languages
    '((emacs-lisp . t)
-	   (python . t)
-	   (dot . t)))
+	 (python . t)
+	 (dot . t)))
   (org-log-done 'time)
   (org-log-into-drawer t)
   (org-todo-keywords
@@ -677,7 +671,7 @@ If more than 5 files are marked, ask for confirmation first."
   (unless (version< org-version "9.2")
 	(require 'org-tempo))
   (when (or (file-directory-p "~/org/agenda") (file-directory-p "~/org/journal"))
-	  (setq org-agenda-files (list "~/org/agenda" "~/org/journal"))))
+    (setq org-agenda-files (list "~/org/agenda" "~/org/journal"))))
 
 (use-package org-journal
   :bind (("C-c j n" . org-journal-new-entry)
@@ -808,10 +802,9 @@ If more than 5 files are marked, ask for confirmation first."
 	(load custom-file))
 
 
-;;; --- Configure default locale
-
+;;; Configure default locales
 (defun sanityinc/locale-var-encoding (v)
-  "Returning the encoding portion of the locale string V, or nil if missin."
+  "Returning the encoding portion of the locale string V, or nil if missing."
   (when v
     (save-match-data)
       (let ((case-fold-search t))
@@ -830,14 +823,11 @@ If more than 5 files are marked, ask for confirmation first."
 (setq locale-coding-system 'utf-8
       coding-system-for-read 'utf-8
       coding-system-for-write 'utf-8)
-(unless (eq system-type 'windows-nt)
+(unless *is-windows*
   (set-selection-coding-system 'utf-8))
-
-;;; locales.el ends here
 
 
 (provide 'init)
-
 ;; Local Variables:
 ;; coding: utf-8-unix
 ;; no-byte-compile: t
