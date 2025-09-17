@@ -7,13 +7,15 @@
 
 ;; [[file:../Emacs.org::*Header and Guard Statements][Header and Guard Statements:2]]
 ;; Produce backtraces on error: helpful for startup issues
-(setq debug-on-error t)
+(setq debug-on-error t
+      debug-on-quit nil
+      debug-on-signal nil)
 
 (let ((minver "29.1"))
   (when (version< emacs-version minver)
         (error "Emacs is too old.")))
 
-;; Add the `lisp' directory, where we'll start to load individual modules.
+;; Add the `lisp' directory
 (add-to-list 'load-path (expand-file-name "lisp" user-emacs-directory))
 ;; Header and Guard Statements:2 ends here
 
@@ -269,14 +271,14 @@ under ~/.emacs.d/site-lisp/NAME"
 ;; Lisp directory (aka, `vendor'):1 ends here
 
 ;; [[file:../Emacs.org::*ELPA / Package config][ELPA / Package config:1]]
-;;; Settings and helpers for package.el
-(require 'package)
-(require 'cl-lib)
-
 ;;; Install into separate package dirs for each Emacs version, to prevent bytecode incompatibility
 (setq package-user-dir
       (expand-file-name (format "elpa-%s.%s" emacs-major-version emacs-minor-version)
                          user-emacs-directory))
+
+;;; Settings and helpers for package.el
+(require 'package)
+(require 'cl-lib)
 
 ;;; Standard package repositories
 (setq package-archives '(("melpa-stable" . "https://stable.melpa.org/packages/")
@@ -301,18 +303,21 @@ under ~/.emacs.d/site-lisp/NAME"
             (daemonp)))
   (use-package exec-path-from-shell
     :ensure t
+    :pin melpa-stable
     :config
     (exec-path-from-shell-initialize)
     (dolist (var '("SSH_AUTH_SOCK" "SSH_AGENT_PID" "GPG_AGENT_INFO" "LANG" "LC_CTYPE" "NIX_SSL_CERT_FILE" "NIX_PATH"))
       (add-to-list 'exec-path-from-shell-variables var))))
 ;; Exec Path:1 ends here
 
+;; [[file:../Emacs.org::*Performance tuning][Performance tuning:1]]
 ;;; --- Performance tuning
 
 ;; General performance tuning with the Garbage Collector Magic Hack
 (use-package gcmh
   :ensure t
   :demand t
+  :pin melpa
   :diminish
   :delight
   :config
@@ -323,6 +328,32 @@ under ~/.emacs.d/site-lisp/NAME"
   (setq gcmh-high-cons-threshold (* 128 1024 1024)))
 
 (setq jit-lock-defer-time 0)
+;; Performance tuning:1 ends here
+
+;;; --- Provide specific hooks for GUI/TTY frame creation
+(defvar after-make-console-frame-hooks '()
+  "Hooks to run after creating a new TTY frame")
+
+(defvar after-make-window-system-frame-hooks '()
+  "Hooks to run after creating a new window-system frame")
+
+(defun run-after-make-frame-hooks (frame)
+  "Run configured hooks in response to the newly-created FRAME
+Selectively runs either `after-make-console-frame-hooks' or
+`after-make-window-system-frame-hooks'."
+  (with-selected-frame frame
+    (run-hooks (if window-system
+                   'after-make-window-system-frame-hooks
+                 'after-make-console-frame-hooks))))
+
+(add-hook 'after-make-frame-functions 'run-after-make-frame-hooks)
+
+(defconst sanityinc/initial-frame (selected-frame)
+  "The frame (if any) active during Emacs initialization.")
+
+(add-hook 'after-init-hook
+          (lambda () (when sanityinc/initial-frame
+                  (run-after-make-frame-hooks sanityinc/initial-frame))))
 
 ;;; --- Day-to-Day editing helpers
 
@@ -413,46 +444,82 @@ under ~/.emacs.d/site-lisp/NAME"
 
 (use-package paredit
   :ensure t
-  :diminish paredit-mode
+  :diminish (paredit-mode))
+;;  :hook ((lisp-mode             . paredit-mode)
+;;	 (cider-mode            . paredit-mode)
+;;	 (cider-repl-mode       . paredit-mode)
+;;     (clojure-mode          . paredit-mode)
+;;	 (emacs-lisp-mode       . paredit-mode))
+
+;;; --- Emacs lisp settings, and common config for other lisps
+
+(defun hplogsdon/eval-last-sexp-or-region (prefix)
+  "Eval region from BEG to END if active, otherwise the last sexp."
+  (interactive "P")
+  (if (and (mark) (use-region-p))
+	  (eval-region (min (point) (mark)) (max (point) (mark)))
+	(pp-eval-last-sexp prefix)))
+
+;; TODO: look into `litable' as an alternative
+(defun hplogsdon/elisp-eval-and-comment-output ()
+  "Add the output of the sexp as a comment after the sexp"
+  (interactive)
+  (save-excursion
+	(end-of-line)
+	(condition-case nil
+		(printc (concat " ; -> " (pp-to-string (eval (preceding-sexp))))
+				(current-buffer))
+	  (error (message "Invalid expression")))))
+
+(defun hplogsdon/elisp-eval-region ()
+  (interactive)
+  (if (region-active-p)
+	  (progn
+		(eval-region (region-beginning)
+					 (region-end))
+		(deactivate-mark))
+	(eval-expression)))
+
+(defun hplogsdon/elisp-headerize ()
+  "Adds a header and footer to an elisp buffer for Flycheck"
+  (interactive)
+  (let ((fname (if (buffer-file-name)
+				   (file-name-nondirectory (buffer-file-name))
+				 (error "This buffer is not visiting a file"))))
+	(save-excursion
+	  (goto-char (point-min))
+	  (insert ";;; " fname " --- Description -*- lexical-binding: t -*-\n"
+			  ";;; Commentary:\n"
+			  ";;; Code:\n\n")
+	  (goto-char (point-max))
+	  (insert ";;; " fname " ends here\n"))))
+
+(defun hplogsdon/elisp-register-elc-delete-on-save ()
+  "If you're saving an elisp file, the .elc is likely invalid."
+  (make-local-variable 'after-save-hook)
+  (add-hook 'after-save-hook
+			'(lambda ()
+			   (when (file-exists-p (concat buffer-file-name "c"))
+				 (delete-file (concat buffer-file-name "c"))))))
+
+(use-package lisp-mode
+  :defer t
+  :hook ((emacs-lisp-mode . outline-minor-mode)
+		 (emacs-lisp-mode . reveal-mode))
+  :bind (("C-x e" . hplogsdon/elisp-eval-and-comment-output))
+  :mode (("\\.el$" . emacs-lisp-mode))
   :init
-  (progn
-	(defun hplogsdon/maybe-map-paredit-newline ()
-	  (unless (or (derived-mode-p 'inferior-emacs-lisp-mode 'cider-repl-mode)
-				  (minibufferp))
-		(local-set-key (kbd "RET") 'paredit-newline)))
-	(add-hook 'paredit-mode-hook 'hplogsdon/maybe-map-pardit-newline))
-  
+  (setq initial-major-mode 'emacs-lisp-mode)
+  (hplogsdon/elisp-register-elc-delete-on-save)
+
   :config
-  (progn
-	(defvar paredit-minibuffer-commands '(eval-expression
-										  pp-eval-expression
-										  eval-expression-with-eldoc
-										  ibuffer-do-eval
-										  ibuffer-do-view-and-eval)
-	  "Interactive commands where paredit should be enabled in minibuffer.")
-	(defun hplogsdon/conditionally-enable-paredit-mode ()
-	  "Enable paredit during lisp-related minibuffer commands."
-	  (when (memq this-command paredit-minibuffer-commands)
-		(enable-paredit-mode)))
-	;; Use paredit in the minibuffer
-	;; https://emacsredux/blog/2013/04/18/evaluate-emacs-lisp-in-the-minibuffer/
-	(add-hook 'minibuffer-setup-hook 'hplogsdon/conditionally-enable-paredit-mode))
+  (turn-on-eldoc-mode)
+  (hplogsdon/elisp-register-elc-delete-on-save))
 
-  :bind (:map paredit-mode-map
-		 ([remap kill-sentence] . paredit-kill)
-		 ([remap backward-kill-sentence] . nil))
 
-  :hook ((lisp-mode             . enable-paredit-mode)
-		 (emacs-lisp-mode       . enable-paredit-mode)
-		 (clojure-mode          . enable-paredit-mode)
-		 (cider-repl-mode       . enable-paredit-mode)
-		 (lisp-interaction-mode . enable-paredit-mode)
-		 (ielm-mode             . enable-paredit-mode)))
-
-;; Paredit Everywhere
-;; (use-package paredit-everywhere
-;;   :ensure t
-;;   :hook ((prog-mode . paredit-everywhere-mode)))
+(use-package color-identifiers-mode
+  :ensure t
+  :hook ((emacs-lisp-mode . color-identifiers-mode)))
 
 ;; [[file:../Emacs.org::*Footer][Footer:1]]
 ;; Allow access from emacsclient 
@@ -481,10 +548,13 @@ under ~/.emacs.d/site-lisp/NAME"
     (unless (memq encoding '(nil utf8 utf-8))
       (message "Warning: non-UTF8 encoding in environment variable %s may cause interop problems with this Emacs configuration." varname))))
 
+;; Set UTF-8 as the default encoding
 (when (fboundp 'set-charset-priority)
-  (let-charset-priority 'unicode))       
-(prefer-coding-system 'utf-8)
-(setq locale-coding-system 'utf-8)
+  (set-charset-priority 'unicode))       
+(prefer-coding-system 'utf-8-unix)
+(setq locale-coding-system 'utf-8
+      coding-system-for-read 'utf-8
+      codign-system-for-write 'utf-8)
 (unless (eq system-type 'windows-nt)
   (set-selection-coding-system 'utf-8))
 
