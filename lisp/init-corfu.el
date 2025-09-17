@@ -15,10 +15,12 @@
 
 ;; Corfu is responsible for interactive completion
 (use-package corfu
-  :hook (prog-mode . corfu-mode)
+  :hook ((prog-mode . corfu-mode)
+         (org-mode . corfu-mode)
+         (shell-mode . corfu-mode)
+         (eshell-mode . corfu-mode))
   :init
-  (dolist (mode '(prog-mode-hook org-mode-hook shell-mode-hook eshell-mode-hook eglot-managed))
-	(add-hook (+unquote mode) #'corfu-mode))
+  (add-hook 'eglot-managed #'corfu-mode)
   ;;(global-corfu-mode)
 
   :config

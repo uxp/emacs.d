@@ -33,8 +33,12 @@
 
 
 (use-package dired
-  :bind
-  <<bindings-from-table(table=dired-bindings-table)>>
+  :bind (("C-x C-j" . dired-jump)
+         ("C-x 4 C-j" . dired-jump-other-window)
+         :map dired-mode-map
+         ("C-x C-k" . dired-do-delete)
+         ("C-c C-o" . dired-omit-mode)
+         ("C-o" . hplogsdon/dired-open-externally))
 
   :config
   (progn 
@@ -52,7 +56,7 @@
       (eval `(defadvice ,fun (after revert-buffer activate)
                (revert-buffer))))
 
-    (add-hook 'dired-mode-hook hplogsdon/dired-mode-defaults)))
+    (add-hook 'dired-mode-hook #'hplogsdon/dired-mode-defaults)))
 
 
 (provide 'init-dired)

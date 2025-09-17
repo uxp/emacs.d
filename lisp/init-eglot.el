@@ -5,15 +5,15 @@
 (use-package eglot
   :after (:all xref)
   :hook ((clojure-mode . eglot-ensure))
-  :bind (:map (eglot-mode-map
-               ("C-<down-mouse-1>" . #'xref-find-definitions)
-               ("C-S-<down-mouse-1>" . #'xref-find-references)
-               ("C-c a r" . #'eglot-rename)
-               ("C-c C-c" . #'eglot-code-actions)))
+  :bind (:map eglot-mode-map
+          ("C-c l c" . eglot-connect)
+          ("C-c l r" . eglot-rename)
+          ("C-c l s" . eglot-shutdown)
+          ("C-c l C" . eglot-code-actions))
   :custom
-  (eglot-configm-server-initiated-edits nil)
   (eglot-autoshutdown t)
   (eglot-send-changes-idle-time 0.1)
+
   :config
   (defun hplogsdon/gfm-unescape-string (string)
     "Remove backslash-escape of punctuation characters in STRING"

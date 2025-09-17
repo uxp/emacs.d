@@ -10,4 +10,4 @@
 ;;  :ensure t)
 
 (provide 'init-terminal)
-;;; init-example.el ends here
+;;; init-terminal.el ends here
