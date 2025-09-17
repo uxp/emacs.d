@@ -193,68 +193,6 @@ LOAD-DURATION is the time taken in milliseconds to load FEATURE.")
 ;; [[file:../Emacs.org::*Helper functions and commands][Helper functions and commands:1]]
 ;;; --- Emacs-Lisp helper functions and commands
 
-(defun sanityinc/display-buffer-full-frame (buffer alist)
-  "If it's not visible, display buffer full-frame, saving the prior window config.
-The saved config will be restored when the window is quit later.
-BUFFER and ALIST are as for `display-buffer-full-frame'."
-  (let ((initial-window-configuration (current-window-configuration)))
-    (or (display-buffer-reuse-window buffer alist)
-      (let ((full-window (display-buffer-full-frame buffer alist)))
-        (prog1
-            full-window
-		  (set-window-parameter full-window 'sanityinc/previous-config initial-window-configuration))))))
-
-(defun sanityinc/maybe-restore-window-configuration (orig &original kill window)
-  (let* ((window  (or window (selected-window)))
-       (to-restore (window-parameter window 'sanityinc/previous-config)))
-  (set-window-parameter window 'sanityinc/previous-config nil)
-  (funcall orig kill window)
-  (when to-restore
-    (set-window-configuration to-restore))))
-
-(advice-add 'quit-window :around 'sanityinc/maybe-restore-window-configuration)
-
-(defmacro sanityinc/fullframe-mode (mode)
-"Configure buffers that open in MODE to display in full-frame."
-`(add-to-list 'display-buffer-alist
-              (cons (cons 'major-mode ,mode)
-                    (list 'sanityinc/display-buffer-full-frame))))
-
-(sanityinc/fullframe-mode 'package-menu-mode)
-
-
-;; Handier way to add modes to auto-mode-alist
-(defun add-auto-mode (mode &rest patterns)
-  "Add entries to `auto-mode-alist' to use `MODE' for all given file `PATTERNS'."
-  (dolist (pattern patterns)
-    (add-to-list 'auto-mode-alist (cons pattern mode))))
-
-(defun sanityinc/remove-auto-mode (mode)
-  "Remove entries from `auto-mode-alist' that are for `MODE'."
-  (setq auto-mode-alist (seq-remove (lambda (x) (eq mode (cdr x))) auto-mode-alist)))
-
-;; Like diminish, but for major modes
-(defun sanityinc/set-major-mode-name (name)
-  "Override the major mode NAME in this buffer."
-  (setq-local mode-name name))
-
-(defun sanityinc/major-mode-lighter (mode name)
-  (add-hook (derived-mode-hook-name mode)
-            (apply-partially 'sanityinc/set-major-mode-name name)))
-
-
-;; String utilities missing from core emacs
-(defun sanityinc/string-all-matches (regex str &optional group)
-  "Find all matches for `REGEX' within `STR', returning the full match string or group `GROUP'."
-  (let ((result nil)
-        (pos 0)
-        (group (or group 0)))
-    (while (string-match regex str pos)
-      (push (match-string group str) result)
-      (setq pos (match-end group)))
-    result))
-
-
 ;; Delete the current file
 (defun delete-this-file ()
   "Delete the current file, and kill the buffer."
@@ -415,11 +353,41 @@ Selectively runs either `after-make-console-frame-hooks' or
   :init
   (load-theme 'monokai-pro t))
 
-(use-package all-the-icons-completion
-  :ensure t
+(use-package nerd-icons)
+
+(use-package nerd-icons-completion
+  :straight
+  (nerd-icons-completion :type git :host github :repo "rainstormstudio/nerd-icons-completion")
+
+  :hook
+  ((marginalia-mode . nerd-icons-completion-marginalia-setup))
+
   :config
-  (require 'all-the-icons)
-  (all-the-icons-completion-mode))
+  (nerd-icons-completion-mode))
+
+(use-package nerd-icons-dired
+  :straight
+  (nerd-icons-dired :type git :host github :repo "rainstormstudio/nerd-icons-dired")
+
+  :hook
+  ((dired-mode . nerd-icons-dired-mode)))
+
+(use-package nerd-icons-ibuffer
+  :straight
+  (nerd-icons-ibuffer :type git :host github :repo "seagle0128/nerd-icons-ibuffer")
+
+  :hook
+  ((ibuffer-mode . nerd-icons-ibuffer-mode)))
+
+(use-package nerd-icons-corfu
+  :straight
+  (nerd-icons-corfu :type git :host github :repo "LuigiPiucco/nerd-icons-corfu")
+
+  :autoload nerd-icons-corfu-formatter
+  :after corfu
+
+  :init
+  (add-to-list 'corfu-margin-formatters #'nerd-icons-corfu-formatter))
 
 ;;; Configuration specific to MacOS
 
@@ -479,71 +447,233 @@ Selectively runs either `after-make-console-frame-hooks' or
 
 ;;; --- Dired customization
 
-(defun hplogsdon/dired-open-externally ()
-  (interactive)
-  (let* ((file-list (dired-get-marked-files))
-         (proceed-p (if (<= (length file-list) 5)
-                        t
-                      (y-or-no-p "Open more than 5 files?"))))
-    (when proceed-p
-      (cond
-        (*is-windows*
-          (mapc (lambda (file-path)
-                  (w32-shell-execute "open" (replace-regexp-in-string "/" "\\" file-path t t)))
-                file-list))
-        (*is-macos*
-          (mapc (lambda (file-path)
-                  (shell-command (format "open \"%s\"" file-path)))
-                file-list))
-        (*is-linux*
-          (mapc (lambda (file-path)
-                  (let (process-connection-type)
-                    (start-process "" nil "xdg-open" file-path)))
-                file-list))))))
-
-
-(defun hplogsdon/dired-mode-defaults ()
-  "Configure the dired-mode buffer."
-  (dired-omit-mode 1)
-  (dired-hide-details-mode))
-
-
 (use-package dired
-  :bind (("C-x C-j" . dired-jump)
-         ("C-x 4 C-j" . dired-jump-other-window)
-         :map dired-mode-map
-         ("C-x C-k" . dired-do-delete)
-         ("C-c C-o" . dired-omit-mode)
-         ("C-o" . hplogsdon/dired-open-externally))
-
+  :ensure nil
+  :defer t
+  :hook
+  ((dired-mode . dired-hide-details-mode))
   :config
-  (progn 
-    (require 'dired-x)
+  (require 'dired-x)
+  (setq dired-omit-files "^\\.[^.].*$")
+  (setq dired-recursive-copies 'always)
+  (setq dired-create-destination-dirs 'ask)
+  (setq dired-clean-confirm-killing-deleted-buffers nil)
+  (setq dired-make-directory-clickable t)
+  (setq dired-mouse-drag-files t)
+  (setq dired-kill-when-opening-new-dired-buffer t)
+  (when *is-macos*
+    (let ((gls (executable-find "gls")))
+      (if gls
+	  (setq insert-directory-program gls
+		dired-use-ls-dired t
+		dired-listing-switches "-aBhl --group-directories-first")
+	(setq dired-use-ls-dired nil)))))
 
-    (setq dired-omit-verbose nil)
+;;; --- isearch settings
 
-    (setq dired-auto-revert-buffer t
-          dired-listing-switches "-alhF --group-directories-first -v"
-          dired-omit-files "^\\.[^.].*$")
+(defun sanityinc/isearch-occur ()
+  "Invoke `consult-line' from isearch."
+  (interactive)
+  (let ((query (if isearch-regexp
+		   isearch-string
+		 (regexp-quote isearch-string))))
+    (isearch-update-ring isearch-string isearch-regexp)
+    (let (search-nonincremental-instead)
+      (ignore-errors (isearch-done t t)))
+    (consult-line query)))
 
-    (dolist (fun '(dired-do-rename
-                   dired-create-directory
-                   wdired-abort-changes))
-      (eval `(defadvice ,fun (after revert-buffer activate)
-               (revert-buffer))))
+;; Search back/forth for the symbol at point
+;; see https://www.emacswiki.org/emacs/SearchAtPoint
+(defun isearch-yank-symbol ()
+  "*Put symbol at current point into search string."
+  (interactive)
+  (let ((sym (thing-at-point 'symbol)))
+	(if sym
+		(progn
+		  (setq isearch-regexp t
+				isearch-string (concat "\\_<" (regexp-quote sym) "\\_>")
+				isearch-message (mapconcat 'isearch-text-char-description isearch-string "")
+				isearch-yank-flag t))
+	  (ding)))
+  (isearch-search-and-update))
 
-    (add-hook 'dired-mode-hook #'hplogsdon/dired-mode-defaults)))
+
+(use-package isearch
+  :bind
+  (("C-c r"    . isearch-forward-regexp)
+   ("C-r"      . isearch-backward-regexp)
+   ("C-c s"    . isearch-forward-symbol)
+   ("C-s"      . isearch-backwards-symbol)
+   ("C-c o"    . sanityinc/isearch-occur)
+   ("C-c C-o"  . sanityinc/isearch-occur)
+   :map isearch-mode-map
+   ("<M-down>" . isearch-ring-advance)
+   ("<M-up>"   . isearch-ring-retreat)
+   :map minibuffer-local-isearch-map
+   ("<M-down>" . next-history-element)
+   ("<M-up"    . previous-history-element))
+
+  :init
+  (setq-default isearch-allow-scroll t
+		lazy-highlight-cleanup nil
+		lazy-highlight-initial-delay 0))
+
+
+;; Exits at the bottom of the marked text
+(defun sanityinc/isearch-exit-other-end ()
+  "Exit isearch, but at the other end of the search string.
+This is useful when followed by an immediate kill."
+  (interactive)
+  (isearch-exit)
+  (goto-char isearch-other-end))
+
+(define-key isearch-mode-map [(control return)] 'sanityinc/isearch-exit-other-end)
+
+;;; --- Settings for grep and grep-like tools
+
+(setq-default grep-highlight-matched t
+	      grep-scroll-output t)
+
+(when *is-macos*
+  (setq-default locate-command "mdfind"))
+
+(use-package wgrep
+  :bind
+  (("C-c C-k" . wgrep-change-to-wgrep-mode)))
+
+(when (executable-find "ag")
+  (use-package ag
+	:init
+	(setq-default ag-highlight-search t)
+	:bind
+	(("M-?" . ag-project)))
+  (use-package wgrep-ag))
+
+(when (executable-find "rg")
+  (use-package rg
+	:bind
+	(("M-?" . rg-project))))
+
+;;; --- Configure uniquification of buffer name
+
+(use-package uniquify
+  :config
+  (setq uniquify-buffer-name-style 'reverse
+        uniquify-separator " • "
+        uniquify-after-kill-buffer-p t
+        uniquify-ignore-buffers-re "^\\*"))
+
+;;; --- iBuffer settings
+
+(use-package ibuffer
+  :ensure nil
+  :bind (("C-x C-b" . ibuffer))
+  :commands (ibuffer-current-buffer
+             ibuffer-find-file
+             ibuffer-do-sort-by-alphabetic)
+  :preface
+  (defvar protected-buffers '("*scratch*" "*Messages*")
+	"Buffers that cannot be killed")
+  (defun hplogsdon/protected-buffers ()
+	"Protect some buffers from being killed."
+	(dolist (buffer protected-buffers)
+	  (with-current-buffer buffer
+		(emacs-lock-mode 'kill))))
+  :init
+  (setq ibuffer-filter-group-name-face '(:inherit (font-lock-string-face bold)))
+  (setq ibuffer-formats '((mark modified read-only locked
+                                " " (icon 2 2 :left :elide) (name 18 18 :left :elide)
+                                " " (size 9 -1 :right)
+                                " " (mode 16 16 :left :elide)
+                                " " filename-and-process)
+                          (mark modified read-only vc-status-mini
+                                " " (name 22 22 :left :elide)
+                                " " (size-h 9 -1 :right)
+                                " " (mode 14 14 :left :elide)
+                                " " (vc-status 12 12 :left)
+                                " " vc-relative-file)
+                          (mark " " (name 16 -1) " " filename)))
+  (setq ibuffer-saved-filter-groups '(("default"
+                                       ("org" (or (mode .org-mode) (name . "^\\Org Mode")))
+                                       ("emacs" (or (name . "^\\*scratch\\*$") (name . "\\*Messages\\*$")))
+                                       ("dired" (mode . dired-mode))
+                                       ("terminal" (name . "^\\*Help\\*$")))))
+  (hplogsdon/protected-buffers)
+  :config
+  (add-hook 'ibuffer-mode-hook
+             (lambda ()
+               (ibuffer-switch-to-saved-filter-groups "default")
+               (ibuffer-update nil t)
+               (ibuffer-auto-mode 1)))
+
+
+  (setq ibuffer-show-empty-filter-groups nil))
+
+;;; --- Configure flymake global behavior
+
+(use-package flymake
+  :ensure nil
+  :hook (prog-mode . flymake-mode)
+  :bind (:map flymake-mode-map
+              ("C-c l" . flymake-show-buffer-diagnostics)
+              ("C-c n" . flymake-goto-next-error)
+              ("C-c p" . flymake-goto-prev-error)
+              ("C-c c" . flymake-start)))
+
+;;; --- Cross Reference (xref) configuration
+
+(use-package xref
+  :straight t
+  :defer t
+  :bind (("s-[" . #'xref-go-back)
+         ("s-]" . #'xref-go-forward)
+         ("C-c r" . #'xref-find-references)
+         ("C-c d" . #'xref-find-definitions))
+  :config (add-to-list 'xref-prompt-for-identifier #'xref-find-references 'append)
+  :custom
+  (xref-auto-jump-to-first-xref t))
+
+;;; --- Settings for tracking recent files
+
+(use-package recentf
+  :defer t
+  :init (recentf-mode)
+  :config
+  (setq recentf-max-saved-items 200
+        recentf-auto-cleanup 300
+        recentf-exclude (list "\\.git/.*\\'"  ; Git contents
+                              "/elpa/.*\\'"   ; Package files
+                              ".*\\.gz\\'"
+                              "TAGS"
+                              (concat package-user-dir "/.*-autoloads\\.el\\'")
+                              "ido.last")))
+
+;;;  --- 
+
+(defun switch-to-minibuffer ()
+  "Switch to minibuffer."
+  (interactive)
+  (if (active-minibuffer-window)
+      (select-window (active-minibuffer-window))
+    (error "Minibuffer is not active")))
+
+(defun kill-this-buffer ()
+  (interactive)
+  (kill-buffer (current-buffer)))
+
+(bind-key "M-m" 'switch-to-minibuffer)
+(bind-key "C-c C-k" 'kill-this-buffer)
 
 ;;; --- Day-to-Day editing helpers
 
 ;; Advises kill-region "C-w" so that if no region is selected, it kills/copies the current line.
 (advice-add 'kill-region :before
-			(lambda (&rest args)
-			  "When called interactively with no active region, kill a single line instead."
-			  (when (called-interactively-p 'interactive)
-				(unless mark-active
-				  (setq args (list (line-beginning-position)
-								   (line-beginning-position 2)))))))
+	    (lambda (&rest args)
+	      "When called interactively with no active region, kill a single line instead."
+	      (when (called-interactively-p 'interactive)
+		(unless mark-active
+		  (setq args (list (line-beginning-position)
+				   (line-beginning-position 2)))))))
 
 ;;; --- Version control support
 
