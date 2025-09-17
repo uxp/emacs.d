@@ -124,6 +124,59 @@ LOAD-DURATION is the time taken in milliseconds to load FEATURE.")
 (setq custom-file (locate-user-emacs-file "custom.el"))
 ;; Bootstrapping:1 ends here
 
+;; [[file:../Emacs.org::*Package Management][Package Management:1]]
+;; Set straight.el default config before bootstrapping
+(setq straight-use-package-by-default t                 ; use-package defaults to straight.el
+      straight-recipes-gnu-elpa-use-mirror t            ; use straight's mirror of elpa
+      straight-built-in-pseudo-packages                 ; dont auto-fetch these builtins
+      '(dired
+        emacs-lisp-mode
+        inferior-lisp
+        isearch
+        use-package
+        uniquify
+        vc
+        which-function-mode
+        ))
+
+;;; Standard package repositories
+(setq package-user-dir (expand-file-name (format "elpa-%s.%s" emacs-major-version emacs-minor-version)
+                                                 user-emacs-directory)
+      package-archives '(("melpa-stable" . "https://stable.melpa.org/packages/")
+                         ("orgmode"      . "https://orgmode.org/elpa/")
+                         ("nongnu"       . "https://elpa.nongnu.org/nongnu/")
+                         ("tromey"       . "https://tromey.com/elpa/")
+                         ("gnu"          . "https://elpa.gnu.org/packages/")
+                         ("melpa"        . "https://melpa.org/packages/"))
+      package-archive-priorities '(("melpa-stable" . 30)
+                                   ("orgmode"      . 30)
+                                   ("nongnu"       . 20) 
+                                   ("tromey"       . 20)
+                                   ("gnu"          .  0)
+                                   ("melpa"        .  0)))
+
+(defvar bootstrap-version)
+(let ((bootstrap-file
+       (expand-file-name 
+        "straight/repos/straight.el/bootstrap.el"
+        (or (bound-and-true-p straight-base-dir)
+            user-emacs-directory)))
+       (bootstrap-version 7))
+  (unless (file-exists-p bootstrap-file)
+    (with-current-buffer
+        (url-retrieve-synchronously
+          "https://radian-software.github.io/straight.el/install.el"
+          'silent 'inhibit-cookies)
+      (goto-char (point-max))
+      (eval-print-last-sexp)))
+  (load bootstrap-file nil 'nomessage))
+
+(setq use-package-verbose t)
+(straight-use-package 'use-package)
+
+(require 'cl-lib)
+;; Package Management:1 ends here
+
 ;; [[file:../Emacs.org::*Helper functions and commands][Helper functions and commands:1]]
 ;;; --- Emacs-Lisp helper functions and commands
 
@@ -269,32 +322,6 @@ under ~/.emacs.d/site-lisp/NAME"
   (let ((f (locate-library (symbol-name name))))
     (and f (string-prefix-p (file-name-as-directory (site-lisp-dir-for name)) f))))
 ;; Lisp directory (aka, `vendor'):1 ends here
-
-;; [[file:../Emacs.org::*ELPA / Package config][ELPA / Package config:1]]
-;;; Install into separate package dirs for each Emacs version, to prevent bytecode incompatibility
-;;(setq package-user-dir
-;;      (expand-file-name (format "elpa-%s.%s" emacs-major-version emacs-minor-version)
-;;                         user-emacs-directory))
-
-;;; Standard package repositories
-(setq package-archives '(("melpa-stable" . "https://stable.melpa.org/packages/")
-                         ("orgmode"      . "https://orgmode.org/elpa/")
-                         ("nongnu"       . "https://elpa.nongnu.org/nongnu/")
-                         ("tromey"       . "https://tromey.com/elpa/")
-                         ("gnu"          . "https://elpa.gnu.org/packages/")
-                         ("melpa"        . "https://melpa.org/packages/"))
-      package-archive-prioritied '(("melpa-stable" . 30)
-                                   ("orgmode"      . 30)
-                                   ("nongnu"       . 20) 
-                                   ("tromey"       . 20)
-                                   ("gnu"          .  0)
-                                   ("melpa"        .  0)))
-
-(setq use-package-verbose t)
-
-(require 'use-package)
-(require 'cl-lib)
-;; ELPA / Package config:1 ends here
 
 ;; [[file:../Emacs.org::*Exec Path][Exec Path:1]]
 ;;; --- Setup exec-path to help Emacs find packages
@@ -503,10 +530,11 @@ Selectively runs either `after-make-console-frame-hooks' or
 			   (when (file-exists-p (concat buffer-file-name "c"))
 				 (delete-file (concat buffer-file-name "c"))))))
 
-(use-package lisp-mode
+(use-package emacs-lisp-mode
   :defer t
   :hook ((emacs-lisp-mode . outline-minor-mode)
-		 (emacs-lisp-mode . reveal-mode))
+	       (emacs-lisp-mode . reveal-mode)
+         (emacs-lisp-mode . eldoc-mode))
   :bind (("C-x e" . hplogsdon/elisp-eval-and-comment-output))
   :mode (("\\.el$" . emacs-lisp-mode))
   :init
