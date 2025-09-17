@@ -694,6 +694,192 @@ This is useful when followed by an immediate kill."
 (bind-key "M-m" 'switch-to-minibuffer)
 (bind-key "C-c C-k" 'kill-this-buffer)
 
+;; [[file:../Emacs.org::*dabbrev][dabbrev:1]]
+(use-package dabbrev
+  ;; Swap M-/ and C-M-/
+  :bind
+  (("M-/" . dabbrev-completion)
+   ("C-M-/" . dabbrev-expand))
+
+  ;; Other useful Dabbrev configuration
+  :custom
+  (dabbrev-ignored-buffer-regexps '("\\.\\(?:pdf\\|jpe?g\\|png\\)\\'"))
+  (setq dabbrev-case-fold-search nil))
+;; dabbrev:1 ends here
+
+;;; --- Settings for hippie-expand
+
+(use-package hippie-exp
+  :ensure nil
+  :bind ([remap dabbrev-expand] . hippie-expand)
+  :commands (hippie-expand)
+  
+  :init
+  (defadvice hippie-expand (around hippie-expand-case-fold activate)
+    "Try to do case-sensitive matching (not effective with all functions)."
+    (let ((case-fold-search nil))
+      ad-do-it))
+  
+  :config
+  (setq hippie-expand-try-functions-list
+        '(;; Try to expand word "dynamically", searching just the current buffer
+          try-expand-dabbrev
+          ;; Try to expand word "dynamically", searching ...?
+          try-expand-dabbrev-visible
+          ;; Try to expand word "dynamically", searching all other buffers.
+          try-expand-dabbrev-all-buffers
+          ;; Try to expand word "dynamically", searching the kill ring
+          try-expand-dabbrev-from-kill
+          ;; Try to complete text as a filename, as many characters are unique
+          try-complete-file-name-partially
+          ;; Try to complete text as a filename.
+          try-complete-file-name
+          ;; Try to complete before point according to all abbrev tables.
+          try-expand-all-abbrevs
+          ;; Try to complete the current line to a list in the buffer
+          try-expand-list
+          ;; Try to complete the current line to a line in the buffer
+          try-expand-line
+          ;; Try to complete the current line to an entire line in a different buffer.
+          try-expand-line-all-buffers
+          ;; Try to complete text using flyspell
+          ;try-flyspell
+          ;; Try to complete as an Emacs Lisp symbol, as many characters are unique.
+          try-complete-lisp-symbol-partially
+	  ;; Try to complete word as an Emacs Lisp symbol.
+	  try-complete-lisp-symbol)))
+
+;;; --- Interactive completion in buffers
+
+;; Corfu is responsible for interactive completion
+(use-package corfu
+  :init
+  (global-corfu-mode)
+
+  :custom
+  (corfu-auto nil)					; Popup appears automatically
+  (corfu-auto-delay 0.2)				; 
+  (corfu-auto-prefix 3)
+  (corfu-quit-no-match 'separator)
+  (corfu-preview-current t))				; Show candidate on pointer
+
+;;; --- Cape 
+
+;; Adds more completion source backends for Corfu
+(use-package cape
+  :bind
+  (("C-c p" . cape-prefix-map)
+   ("s-n p" . completion-at-point))
+
+  :init
+  (add-to-list 'completion-at-point-functions #'cape-file)
+  (add-to-list 'completion-at-point-functions #'cape-dabbrev))
+
+
+;; Adjust some of the emacs defaults if we load this module
+(use-package emacs
+  :ensure nil
+  :custom
+  ;; limit the height of the *Completions* buffer
+  (completions-max-height 15)
+  ;; Use TAB for completions first, then indent
+  (tab-always-indent 'complete))
+
+;;; --- Working with windows within frames
+;;; Commentary:
+;;; Code:
+
+(use-package window
+  :ensure nil
+  :bind
+  (;; Dont ask before killing a buffer.
+   ([remap kill-buffer] . kill-this-buffer)))
+
+;; Show window number when switching
+(use-package switch-window
+  :ensure t
+  :defer t
+  :config
+  (setq switch-window-input-style 'minibuffer)
+  (setq switch-window-increase 4)
+  (setq switch-window-threshold 2)
+  (setq switch-window-shortcut-style 'qwerty)
+  (setq switch-window-qwerty-shortcuts
+		'("a" "s" "d" "f" "g" "h" "i" "j" "k"))
+  :bind
+  (;; TODO: validate these
+   ("C-x 0" . switch-window-then-delete)
+   ("C-x 1" . switch-window-then-maximum)
+   ("C-x 2" . switch-window-then-split-below)
+   ("C-x 3" . switch-window-then-split-right)
+   ("C-x o" . switch-window)
+   ("C-x w" . switch-window-then-swap-buffer)
+   ("C-<up>" . windmove-up)
+   ("C-<down>" . windmove-down)
+   ([remap other-window] . switch-window)))
+
+;; Helps move buffers around
+(use-package buffer-move
+  :ensure t
+  :defer t
+  :bind
+  (;; Steal VIM movement keys.
+   ("C-S-h" . #'buf-move-left )
+   ("C-S-j" . #'buf-move-down)
+   ("C-S-k" . #'buf-move-up)
+   ("C-S-l" . #'buf-moce-right)))
+
+;;; --- Save and restore editor sessions between restarts
+
+;; save a list of open files in ~/.emacs.d/.emacs.desktop
+(setq desktop-path (list user-emacs-directory)
+	  desktop-auto-save-timeout 600)
+(desktop-save-mode 1)
+
+(defun sanityinc/desktop-time-restore (orig &rest args)
+  (let ((start-time (current-time)))
+	(prog1
+		(apply orig args)
+	  (message "Desktop restored in %.2fms"
+			   (sanityinc/time-subtract-millis (current-time)
+											   start-time)))))
+(advice-add 'desktop-read :around 'sanityinc/desktop-time-restore)
+
+(defun sanityinc/desktop-time-buffer-create (orig ver filename &rest args)
+  (let ((start-time (current-time)))
+	(prog1
+	    (apply orig ver filename args)
+	  (message "Desktop: %.2fms to restore %s"
+			   (sanityinc/time-subtract-millis (current-time)
+											   start-time)
+			   (when filename
+				 (abbreviate-file-name filename))))))
+(advice-add 'desktop-create-buffer :around 'sanityinc/desktop-time-buffer-create)
+
+;; Restore histories and registers after saving
+(setq-default history-length 1000)
+(add-hook 'after-init-hook 'savehist-mode)
+
+(use-package session
+  :config
+  (setq session-save-file (locate-user-emacs-file ".session"))
+  (setq session-name-disable-regexp "\\(?:\\`'/tmp\\|\\.git/[A-Z_]+\\'\\)")
+  (setq session-save-file-coding-system 'utf-8)
+
+  (add-hook 'after-init-hook 'session-initialize)
+
+  (setq desktop-globals-to-save
+		'((compile-history      . 30)
+		  (dired-regexp-history . 20)
+		  (file-name-history    . 100)
+		  (grep-find-history    . 30)
+		  (grep-history         . 30)
+		  (minibuffer-history   . 50)
+		  (org-tags-history     . 50)
+		  (regexp-history       . 60)
+		  (regexp-search-ring   . 20)
+		  (search-ring          . 20))))
+
 ;;; --- Day-to-Day editing helpers
 
 ;; Advises kill-region "C-w" so that if no region is selected, it kills/copies the current line.
