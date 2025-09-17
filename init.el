@@ -1,9 +1,15 @@
-;;(require 'init-example)
+;;; --- Description statement
 
-;; init.el --- -*- lexical-binding: t -*-
-
-;; This config targets Emacs 30
-;; Written by hplogsdon (https://gitlab.com/hplogdon/dotfiles)
+;;; init.el --- Local Initialization File -*- lexical-binding: t -*-
+;;; Commentary:
+;;;   This config targets Emacs 30, and is automatically generated via
+;;;   Org-Mode Tangled file README.org
+;;;
+;;;   Written by hplogsdon (https://gitlab.com/hplogdon/dotfiles)
+;;;
+;;;   Do not edit this by hand.
+;;;
+;;; Code:
 
 ;; [[file:../Emacs.org::*Header and Guard Statements][Header and Guard Statements:2]]
 ;; Produce backtraces on error: helpful for startup issues
@@ -94,10 +100,10 @@ LOAD-DURATION is the time taken in milliseconds to load FEATURE.")
 
 ;; [[file:../Emacs.org::*Helper functions][Helper functions:1]]
 (setq *spell-check-support-enabled* nil) ;; Enable with 't if you prefer
-;; FIX THESE
+
 (setq *is-macos* (eq system-type 'darwin))
-(setq *is-windows* (eq system-type 'windows))
-(setq *is-linux* (eq system-type 'linux))
+(setq *is-windows* (memq system-type '(windows-nt ms-dos cygwin)))
+(setq *is-linux* (eq system-type 'gnu/linux))
 
 (defun hplogsdon/reload-user-init-file ()
   "Reload the init file"
@@ -176,6 +182,13 @@ LOAD-DURATION is the time taken in milliseconds to load FEATURE.")
 
 (require 'cl-lib)
 ;; Package Management:1 ends here
+
+;; [[file:../Emacs.org::*Package helpers][Package helpers:1]]
+;;; --- Package Helpers
+
+(use-package diminish
+  :ensure t)
+;; Package helpers:1 ends here
 
 ;; [[file:../Emacs.org::*Helper functions and commands][Helper functions and commands:1]]
 ;;; --- Emacs-Lisp helper functions and commands
@@ -345,9 +358,7 @@ under ~/.emacs.d/site-lisp/NAME"
 (use-package gcmh
   :ensure t
   :demand t
-  :pin melpa
-  :diminish
-  :delight
+  :diminish (gcmh-mode)
   :config
   (gcmh-mode 1)
   :init
@@ -383,6 +394,152 @@ Selectively runs either `after-make-console-frame-hooks' or
           (lambda () (when sanityinc/initial-frame
                   (run-after-make-frame-hooks sanityinc/initial-frame))))
 
+;;; --- Integrate with terminals such as xterm
+;;; Commentary:
+;;; Code:
+(require 'init-frame-hooks)
+
+(global-set-key [mouse-4] (lambda () (interactive) (scroll-down 1)))
+(global-set-key [mouse-5] (lambda () (interactive) (scroll-up 1)))
+
+(autoload 'mwheel-install "mwheel")
+
+(defun sanityinc/console-frame-setup ()
+  (xterm-mouse-mode 1)
+  (mwheel-install))
+
+
+(add-hook 'after-make-console-frame-hooks 'sanityinc/console-frame-setup)
+
+;;; --- Theming
+
+(use-package monokai-pro-theme
+  :ensure t
+  :init
+  (load-theme 'monokai-pro t))
+
+(use-package all-the-icons-completion
+  :ensure t
+  :config
+  (require 'all-the-icons)
+  (all-the-icons-completion-mode))
+
+;;; Configuration specific to MacOS
+
+(when *is-macos*
+  (setq mac-right-command-modifier 'super)
+  (setq mac-command-modifier 'super)
+  (setq mac-option-modifier 'meta)
+  (setq mac-left-option-modifier 'meta)
+  (setq mac-right-option-modifier 'meta)
+  (setq mac-right-option nil)
+
+  ;; Make mouse wheel / trackpad scrolling less jerky
+  (setq mouse-wheel-scroll-amount '(1
+                                    ((shift) . 5)
+                                    ((control))))
+  (dolist (multiple '("" "double-" "triple-"))
+    (dolist (direction '("right" "left"))
+      (global-set-key (read-kbd-macro (concat "<" multiple "wheel-" "direction" ">")) 'ignore)))
+  ;; Cycle through frames
+  (global-set-key (kbd "M-`") 'ns-next-frame)
+  ;; Hide/Minimize
+  (global-set-key (kbd "M-h") 'ns-do-hide-emacs)
+  ;; Isolate frame
+  (global-set-key (kbd "M-'") 'ns-do-hide-others)
+  (with-eval-after-load 'nxml-mode
+    (define-key nxml-mode-map (kbd "M-h") nil))
+  ;; what describe-key reports for cmd-option-h
+  (global-set-key (kbd "M-_") 'ns-do-hide-others))
+
+;;; --- Non-TTY frames behavior
+
+;; Stop C-z frome 
+(defun sanityinc/maybe-suspend-frame ()
+  (interactive)
+  (unless (and *is-macos* window-system)
+    (suspend-frame)))
+
+(global-set-key (kbd "C-z") 'sanityinc/maybe-suspend-frame)
+
+
+;; Suppress GUI features
+(setq use-file-dialog nil)
+(setq use-dialog-box nil)
+(setq inhibit-startup-screen t)
+
+
+;; Window size and features
+(setq-default window-resize-pixelwise t
+              frame-resize-pixelwise t)
+
+(when (fboundp 'tool-bar-mode)
+  (tool-bar-mode -1))
+(when (fboundp 'set-scroll-bar-mode)
+  (set-scroll-bar-mode nil))
+
+(menu-bar-mode -1)
+
+;;; --- Dired customization
+
+(defun hplogsdon/dired-open-externally ()
+  "In dired, open marked files in external application.
+If more than 5 files are marked, ask for confirmation first." 
+  (interactive)
+  (let* ((file-list (dired-get-marked-files))
+         (proceed-p (if (<= (length file-list) 5)
+                        t
+                      (y-or-no-p "Open more than 5 files?"))))
+    (when proceed-p
+      (cond
+        (*is-windows*
+          (mapc (lambda (file-path)
+                  (w32-shell-execute "open" (replace-regexp-in-string "/" "\\" file-path t t)))
+                file-list))
+        (*is-macos*
+          (mapc (lambda (file-path)
+                  (shell-command (format "open \"%s\"" file-path)))
+                file-list))
+        (*is-linux*
+          (mapc (lambda (file-path)
+                  (let (process-connection-type)
+                    (start-process "" nil "xdg-open" file-path)))
+                file-list))))))
+
+
+(defun hplogsdon/dired-mode-defaults ()
+  "Configure the dired-mode buffer."
+  (dired-omit-mode 1)
+  (dired-hide-details-mode)
+  (diff-hl-dired-mode))
+
+
+(use-package dired
+  :bind (("C-x C-j" . dired-jump)
+         ("C-x 4 C-j" . dired-jump-other-window)
+         :map dired-mode-map
+         ("C-x C-k" . dired-do-delete)
+         ("C-c C-o" . dired-omit-mode)
+         ("C-o" . hplogsdon/dired-open-externally))
+
+  :config
+  (progn 
+    (require 'dired-x)
+
+    (setq dired-omit-verbose nil)
+
+    (setq dired-auto-revert-buffer t
+          dired-listing-switches "-alhF --group-directories-first -v"
+          dired-omit-files "^\\.[^.].*$")
+
+    (dolist (fun '(dired-do-rename
+                   dired-create-directory
+                   wdired-abort-changes))
+      (eval `(defadvice ,fun (after revert-buffer activate)
+               (revert-buffer))))
+
+    (add-hook 'dired-mode-hook #'hplogsdon/dired-mode-defaults)))
+
 ;;; --- Day-to-Day editing helpers
 
 ;; Advises kill-region "C-w" so that if no region is selected, it kills/copies the current line.
@@ -393,6 +550,76 @@ Selectively runs either `after-make-console-frame-hooks' or
 				(unless mark-active
 				  (setq args (list (line-beginning-position)
 								   (line-beginning-position 2)))))))
+
+;;; --- Version control support
+
+;; program-specific version control packages are configured separately.
+;; see `git', for example
+
+(use-package diff-hl
+  :ensure t
+  :after (dired)
+  :hook ((prog-mode  . diff-hl-mode)
+		     (dired-mode . diff-hl-dired-mode)
+		     (after-init . global-diff-hl-mode))
+  :init
+  (defconst hplogsdon/diff-hl-mode-hooks '(emacs-lisp-mode-hook
+										   conf-space-mode-hook ; .tmux.conf
+										   markdown-mode-hook
+										   css-mode-hook
+										   web-mode-hook
+										   sh-mode-hook
+										   python-mode-hook
+										   yaml-mode-hook ; tmuxp yaml configs
+										   c-mode-hook)
+	"List of hook of major modes in which `diff-hl-mode' should be enabled.")
+  (dolist (hook hplogsdon/diff-hl-mode-hooks)
+	  (add-hook hook #'diff-hl-flydiff-mode))
+  
+  :config
+  (with-eval-after-load 'magit
+	  (add-hook 'magit-pre-refresh-hook #'diff-hl-magit-pre-refresh)
+	  (add-hook 'magit-post-refresh-hook #'diff-hl-magit-post-refresh))
+
+  :custom
+  (diff-hl-disable-on-remote t)
+  (diff-hl-margin-symbols-alist
+   '((insert . " ")
+	   (delete . " ")
+     (change . " ")
+     (unknown . "?")
+     (ignored . "i"))))
+
+;; TODO: diff-hl-hydra ?
+;; (use-package diff-hl-hydra
+;;   :after (hydra))
+
+(use-package vc
+  :bind (("C-x v =" . hplogsdon/vc-diff)
+		     ("C-x v H" . vc-region-history)) ;; new command in emacs 25.x
+  :config
+  (defun hplogsdon/vc-diff (no-whitespace)
+	"Call `vc-diff' as usual if buffer is not modified.
+  If the buffer is modified (yet to be saved, dirty) call
+  `diff-buffer-with-file'. If NO-WHITESPACE is non-nill, ignore
+  all whitespace when doing diff."
+	(interactive "P")
+	(let* ((no-ws-switch '("-w"))
+		   (vc-git-diff-switches (if no-whitespace
+									 no-ws-switch
+								   vc-git-diff-switches))
+		   (vc-diff-switches (if no-whitespace
+								 no-ws-switch
+							   vc-diff-switches))
+		   (diff-switches (if no-whitespace
+							  no-ws-switch
+							vc-diff-switches))
+		   ;; set `current-prefix-arg' no nil so that the HISTORIC arg of
+		   ;; `vc-diff' stays nil.
+		   current-prefix-arg)
+	  (if (buffer-modified-p)
+		  (diff-buffer-with-file (current-buffer))
+		(call-interactively #'vc-diff)))))
 
 ;;; --- Github integration
 
@@ -433,10 +660,10 @@ Selectively runs either `after-make-console-frame-hooks' or
   (org-confirm-babel-evaluate 'nil)
   (org-deadline-warning-days 7)
   (org-agenda-window-setup 'other-window)
-  (org-babel-load-languges
+  (org-babel-load-languages
    '((emacs-lisp . t)
-	 (python . t)
-	 (dot . t)))
+	   (python . t)
+	   (dot . t)))
   (org-log-done 'time)
   (org-log-into-drawer t)
   (org-todo-keywords
@@ -444,13 +671,13 @@ Selectively runs either `after-make-console-frame-hooks' or
 	 (sequence "WAITING(w@/!)" "HOLD(h@/!)" "|" "CANCELLED(c@/!)")))
 
   :custom-face
-  (org-agenda-current-time ((t (:forground "spring green"))))
+  (org-agenda-current-time ((t (:foreground "spring green"))))
 
   :config
   (unless (version< org-version "9.2")
 	(require 'org-tempo))
   (when (or (file-directory-p "~/org/agenda") (file-directory-p "~/org/journal"))
-	(setq org-agenda-files (list "~/org/agenda" "~/org/journal"))))
+	  (setq org-agenda-files (list "~/org/agenda" "~/org/journal"))))
 
 (use-package org-journal
   :bind (("C-c j n" . org-journal-new-entry)
@@ -542,13 +769,32 @@ Selectively runs either `after-make-console-frame-hooks' or
   (hplogsdon/elisp-register-elc-delete-on-save)
 
   :config
-  (turn-on-eldoc-mode)
+  (eldoc-mode 1)
   (hplogsdon/elisp-register-elc-delete-on-save))
 
 
 (use-package color-identifiers-mode
   :ensure t
   :hook ((emacs-lisp-mode . color-identifiers-mode)))
+
+;; [[file:../Emacs.org::*which-key][which-key:1]]
+;;; --- Which Key
+
+(use-package which-key
+  :ensure t
+  :diminish ""
+  :custom
+  (which-key-mode t))
+
+(use-package which-key-posframe
+  :config
+  (set-face-attribute 'which-key-posframe nil :background "wheat1")
+  :custom
+  (which-key-posframe-mode t)
+  (which-key-posframe-poshandler 'posframe-poshandler-frame-bottom-left-corner))
+
+(which-function-mode t)
+;; which-key:1 ends here
 
 ;; [[file:../Emacs.org::*Footer][Footer:1]]
 ;; Allow access from emacsclient 
@@ -583,7 +829,7 @@ Selectively runs either `after-make-console-frame-hooks' or
 (prefer-coding-system 'utf-8-unix)
 (setq locale-coding-system 'utf-8
       coding-system-for-read 'utf-8
-      codign-system-for-write 'utf-8)
+      coding-system-for-write 'utf-8)
 (unless (eq system-type 'windows-nt)
   (set-selection-coding-system 'utf-8))
 
