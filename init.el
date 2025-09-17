@@ -272,13 +272,9 @@ under ~/.emacs.d/site-lisp/NAME"
 
 ;; [[file:../Emacs.org::*ELPA / Package config][ELPA / Package config:1]]
 ;;; Install into separate package dirs for each Emacs version, to prevent bytecode incompatibility
-(setq package-user-dir
-      (expand-file-name (format "elpa-%s.%s" emacs-major-version emacs-minor-version)
-                         user-emacs-directory))
-
-;;; Settings and helpers for package.el
-(require 'package)
-(require 'cl-lib)
+;;(setq package-user-dir
+;;      (expand-file-name (format "elpa-%s.%s" emacs-major-version emacs-minor-version)
+;;                         user-emacs-directory))
 
 ;;; Standard package repositories
 (setq package-archives '(("melpa-stable" . "https://stable.melpa.org/packages/")
@@ -293,6 +289,11 @@ under ~/.emacs.d/site-lisp/NAME"
                                    ("tromey"       . 20)
                                    ("gnu"          .  0)
                                    ("melpa"        .  0)))
+
+(setq use-package-verbose t)
+
+(require 'use-package)
+(require 'cl-lib)
 ;; ELPA / Package config:1 ends here
 
 ;; [[file:../Emacs.org::*Exec Path][Exec Path:1]]
