@@ -66,37 +66,42 @@ LOAD-DURATION is the time taken in milliseconds to load FEATURE.")
 
 (defun sanityinc/require-times-sort-by-start-time-pred (entry1 entry2)
   (< (string-to-number (elt (nth 1 entry1) 0))
-	 (string-to-number (elt (nth 1 entry2) 0))))
+     (string-to-number (elt (nth 1 entry2) 0))))
 
 
 (defun sanityinc/require-times-sort-by-load-time-pred (entry1 entry2)
   (> (string-to-number (elt (nth 1 entry1) 0))
-	 (string-to-number (elt (nth 1 entry2) 0))))
+     (string-to-number (elt (nth 1 entry2) 0))))
 
 
 (defun sanityinc/require-times-tabulated-list-entries ()
   (cl-loop for (feature start-time millis) in sanityinc/require-times
-		   with order = 0
-		   do (cl-incf order)
-		   collect (list order
-						 (vector
-						  (format "%.3f" (sanityinc/time-subtract-millis start-time before-init-time))
-						  (symbol-name feature)
-						  (format "%.3f" millis)))))
+	   with order = 0
+	   do (cl-incf order)
+	   collect (list order
+			 (vector
+			  (format "%.3f" (sanityinc/time-subtract-millis start-time before-init-time))
+			  (symbol-name feature)
+			  (format "%.3f" millis)))))
 
 
 (defun sanityinc/require-times ()
-  "Show a tabular view of how long various libraries took to load.")
-
+  "Show a tabular view of how long various libraries took to load."
+  (interactive)
+  (with-current-buffer (get-buffer-create "*Require Times*")
+		       (sanityinc/require-times-mode)
+		       (tabulated-list-revert)
+		       (display-buffer (current-buffer))))
 
 (defun sanityinc/show-init-time ()
   (message "init completed in %.2fms"
-		   (sanityinc/time-subtract-millis after-init-time before-init-time)))
+	   (sanityinc/time-subtract-millis after-init-time before-init-time)))
 
 (add-hook 'after-init-hook 'sanityinc/show-init-time)
 ;; Benchmarking:1 ends here
 
 ;; [[file:../Emacs.org::*Helper functions][Helper functions:1]]
+;;; --- Helpful defines and functions
 (setq *spell-check-support-enabled* nil) ;; Enable with 't if you prefer
 
 (setq *is-macos* (eq system-type 'darwin))
@@ -124,6 +129,7 @@ LOAD-DURATION is the time taken in milliseconds to load FEATURE.")
 ;; Helper functions:1 ends here
 
 ;; [[file:../Emacs.org::*Bootstrapping][Bootstrapping:1]]
+;;; --- Bootstrap stuff.
 ;; Set user custom file
 (setq custom-file (locate-user-emacs-file "custom.el"))
 ;; Bootstrapping:1 ends here
@@ -154,14 +160,14 @@ LOAD-DURATION is the time taken in milliseconds to load FEATURE.")
                          ("melpa"        . "https://melpa.org/packages/"))
       package-archive-priorities '(("melpa-stable" . 30)
                                    ("orgmode"      . 30)
-                                   ("nongnu"       . 20) 
+                                   ("nongnu"       . 20)
                                    ("tromey"       . 20)
                                    ("gnu"          .  0)
                                    ("melpa"        .  0)))
 
 (defvar bootstrap-version)
 (let ((bootstrap-file
-       (expand-file-name 
+       (expand-file-name
         "straight/repos/straight.el/bootstrap.el"
         (or (bound-and-true-p straight-base-dir)
             user-emacs-directory)))
@@ -345,8 +351,14 @@ Selectively runs either `after-make-console-frame-hooks' or
 (add-hook 'after-make-console-frame-hooks 'sanityinc/console-frame-setup)
 
 ;;; --- Fonts
-(set-face-attribute 'default nil :font "JetBrains Mono NL Nerd Font")
-(set-frame-font "JetBrains Mono NL Nerd Font" nil t)
+(if *is-macos*
+  (progn
+    (set-face-attribute 'default nil :font "JetBrainsMonoNL Nerd Font")
+    (set-frame-font "JetBrainsMonoNL Nerd Font" nil t))
+  (progn
+    (set-face-attribute 'default nil :font "JetBrains Mono NL Nerd Font")
+    (set-frame-font "JetBrains Mono NL Nerd Font" nil t)))
+
 
 ;;(set-face-attribute 'default nil
 ;;		    :font "JetBrains Mono NL Nerd Font"
@@ -361,6 +373,7 @@ Selectively runs either `after-make-console-frame-hooks' or
 (use-package fira-code-mode
   :straight t
   :demand t
+  :if (display-graphic-p)
   :hook prog-mode
   :custom (fira-code-mode-disabled-ligatures '("[]" ":" "x"))
   :config (fira-code-mode-set-font))
@@ -416,6 +429,19 @@ Selectively runs either `after-make-console-frame-hooks' or
   :init
   (add-to-list 'corfu-margin-formatters #'nerd-icons-corfu-formatter))
 
+;;; --- Line Numbers
+
+(column-number-mode)
+(global-display-line-numbers-mode t)
+
+;; disable line numbers where they don't make sense or arent useful.
+(dolist (mode '(org-mode-hook
+		term-mode-hook
+		treemacs-mode-hook
+		dired-mode-hook
+		eshell-mode-hook))
+  (add-hook mode (lambda () (display-line-numbers-mode nil))))
+
 ;;; --- Theming
 
 (use-package monokai-pro-theme
@@ -451,7 +477,7 @@ Selectively runs either `after-make-console-frame-hooks' or
   ;; what describe-key reports for cmd-option-h
   (global-set-key (kbd "M-_") 'ns-do-hide-others))
 
-;;; General keybinds
+;;; General keybinds-
 
 (defun hplogsdon/kill-this-buffer ()
   (interactive)
@@ -760,7 +786,7 @@ This is useful when followed by an immediate kill."
                               (concat package-user-dir "/.*-autoloads\\.el\\'")
                               "ido.last")))
 
-;;;  --- 
+;;;  ---
 
 (defun switch-to-minibuffer ()
   "Switch to minibuffer."
@@ -835,18 +861,18 @@ This is useful when followed by an immediate kill."
 
   :custom
   (corfu-auto nil)					; Popup appears automatically
-  (corfu-auto-delay 0.2)				; 
+  (corfu-auto-delay 0.2)				;
   (corfu-auto-prefix 3)
   (corfu-quit-no-match 'separator)
   (corfu-preview-current t))				; Show candidate on pointer
 
-;;; --- Cape 
+;;; --- Cape
 
 ;; Adds more completion source backends for Corfu
 (use-package cape
   :bind
   (("C-c p" . cape-prefix-map)
-   ("s-n p" . completion-at-point))
+   ("C-c M-p" . completion-at-point))
 
   :init
   (add-to-list 'completion-at-point-functions #'cape-file)
@@ -874,7 +900,7 @@ This is useful when followed by an immediate kill."
   (setq switch-window-threshold 2)
   (setq switch-window-shortcut-style 'qwerty)
   (setq switch-window-qwerty-shortcuts
-		'("a" "s" "d" "f" "g" "h" "i" "j" "k"))
+        '("a" "s" "d" "f" "g" "h" "i" "j" "k"))
   :bind
   (;; TODO: validate these
    ("C-x 0" . switch-window-then-delete)
@@ -902,27 +928,27 @@ This is useful when followed by an immediate kill."
 
 ;; save a list of open files in ~/.emacs.d/.emacs.desktop
 (setq desktop-path (list user-emacs-directory)
-	  desktop-auto-save-timeout 600)
+      desktop-auto-save-timeout 600)
 (desktop-save-mode 1)
 
 (defun sanityinc/desktop-time-restore (orig &rest args)
   (let ((start-time (current-time)))
-	(prog1
-		(apply orig args)
-	  (message "Desktop restored in %.2fms"
-			   (sanityinc/time-subtract-millis (current-time)
-											   start-time)))))
+    (prog1
+        (apply orig args)
+      (message "Desktop restored in %.2fms"
+               (sanityinc/time-subtract-millis (current-time)
+					       start-time)))))
 (advice-add 'desktop-read :around 'sanityinc/desktop-time-restore)
 
 (defun sanityinc/desktop-time-buffer-create (orig ver filename &rest args)
   (let ((start-time (current-time)))
-	(prog1
-	    (apply orig ver filename args)
-	  (message "Desktop: %.2fms to restore %s"
-			   (sanityinc/time-subtract-millis (current-time)
-											   start-time)
-			   (when filename
-				 (abbreviate-file-name filename))))))
+    (prog1
+	(apply orig ver filename args)
+      (message "Desktop: %.2fms to restore %s"
+	       (sanityinc/time-subtract-millis (current-time)
+					       start-time)
+	       (when filename
+                 (abbreviate-file-name filename))))))
 (advice-add 'desktop-create-buffer :around 'sanityinc/desktop-time-buffer-create)
 
 ;; Restore histories and registers after saving
@@ -938,16 +964,16 @@ This is useful when followed by an immediate kill."
   (add-hook 'after-init-hook 'session-initialize)
 
   (setq desktop-globals-to-save
-		'((compile-history      . 30)
-		  (dired-regexp-history . 20)
-		  (file-name-history    . 100)
-		  (grep-find-history    . 30)
-		  (grep-history         . 30)
-		  (minibuffer-history   . 50)
-		  (org-tags-history     . 50)
-		  (regexp-history       . 60)
-		  (regexp-search-ring   . 20)
-		  (search-ring          . 20))))
+	'((compile-history      . 30)
+	  (dired-regexp-history . 20)
+	  (file-name-history    . 100)
+	  (grep-find-history    . 30)
+	  (grep-history         . 30)
+	  (minibuffer-history   . 50)
+	  (org-tags-history     . 50)
+	  (regexp-history       . 60)
+	  (regexp-search-ring   . 20)
+	  (search-ring          . 20))))
 
 ;;; --- Day-to-Day editing helpers
 
@@ -959,6 +985,43 @@ This is useful when followed by an immediate kill."
 		(unless mark-active
 		  (setq args (list (line-beginning-position)
 				   (line-beginning-position 2)))))))
+
+;;; --- Special handling for whitespace
+
+;; Show whitespace issues
+(use-package whitespace
+  :diminish (global-whitespace-mode
+              whitespace-mode
+              whitespace-newline-mode)
+  :bind
+  ("C-c T w" . whitespace-mode)
+  :hook
+  (prog-mode . whitespace-mode)
+
+  :config
+  (setq whitespace-line-column 120
+        whitespace-style '(face
+                           tabs
+                           indent
+                           tab-mark
+                           empty
+                           trailing
+                           lines-tail)))
+
+(use-package whitespace-cleanup-mode
+  :ensure t
+  :diminish whitespace-cleanup-mode
+
+  :bind (("C-c T W" . whitespace-cleanup-mode)
+         ("C-c e w" . whitespace-cleanup))
+
+  :hook
+  (prog-mode . whitespace-cleanup-mode)
+
+  :config
+  (global-whitespace-cleanup-mode 1))
+
+(global-set-key [remap just-one-space] 'cycle-spacing)
 
 ;;; --- Version control support
 
@@ -981,14 +1044,14 @@ This is useful when followed by an immediate kill."
                                            python-mode-hook
                                            yaml-mode-hook ; tmuxp yaml configs
                                            c-mode-hook)
-	"List of hook of major modes in which `diff-hl-mode' should be enabled.")
+    "List of hook of major modes in which `diff-hl-mode' should be enabled.")
   (dolist (hook hplogsdon/diff-hl-mode-hooks)
     (add-hook hook #'diff-hl-flydiff-mode))
-  
+
   :config
   (with-eval-after-load 'magit
-	  (add-hook 'magit-pre-refresh-hook #'diff-hl-magit-pre-refresh)
-	  (add-hook 'magit-post-refresh-hook #'diff-hl-magit-post-refresh))
+    (add-hook 'magit-pre-refresh-hook #'diff-hl-magit-pre-refresh)
+    (add-hook 'magit-post-refresh-hook #'diff-hl-magit-post-refresh))
 
   :custom
   (diff-hl-disable-on-remote t)
@@ -1005,30 +1068,69 @@ This is useful when followed by an immediate kill."
 
 (use-package vc
   :bind (("C-x v =" . hplogsdon/vc-diff)
-		 ("C-x v H" . vc-region-history)) ;; new command in emacs 25.x
+	 ("C-x v H" . vc-region-history)) ;; new command in emacs 25.x
   :config
   (defun hplogsdon/vc-diff (no-whitespace)
-	  "Call `vc-diff' as usual if buffer is not modified.
+    "Call `vc-diff' as usual if buffer is not modified.
   If the buffer is modified (yet to be saved, dirty) call
   `diff-buffer-with-file'. If NO-WHITESPACE is non-nill, ignore
   all whitespace when doing diff."
-	  (interactive "P")
-	  (let* ((no-ws-switch '("-w"))
-		     (vc-git-diff-switches (if no-whitespace
-			  					 no-ws-switch
-								   vc-git-diff-switches))
-		   (vc-diff-switches (if no-whitespace
-								 no-ws-switch
-							   vc-diff-switches))
-		   (diff-switches (if no-whitespace
-							  no-ws-switch
-							vc-diff-switches))
-		   ;; set `current-prefix-arg' no nil so that the HISTORIC arg of
-		   ;; `vc-diff' stays nil.
-		   current-prefix-arg)
-	  (if (buffer-modified-p)
-		  (diff-buffer-with-file (current-buffer))
-		(call-interactively #'vc-diff)))))
+    (interactive "P")
+    (let* ((no-ws-switch '("-w"))
+	   (vc-git-diff-switches (if no-whitespace
+				     no-ws-switch
+				   vc-git-diff-switches))
+	   (vc-diff-switches (if no-whitespace
+				 no-ws-switch
+			       vc-diff-switches))
+	   (diff-switches (if no-whitespace
+			      no-ws-switch
+			    vc-diff-switches))
+	   ;; set `current-prefix-arg' no nil so that the HISTORIC arg of
+	   ;; `vc-diff' stays nil.
+	   current-prefix-arg)
+      (if (buffer-modified-p)
+	  (diff-buffer-with-file (current-buffer))
+	(call-interactively #'vc-diff)))))
+
+;;; init-git.el --- Git SCM Support -*- lexical-binding: t -*-
+;;; Commentary:
+;;; Code:
+
+(use-package git-modes
+  :mode
+  ("\\'\\.(docker\\|fd\\|rg\\|ag\\|ag\\|git\\)?ignore\\'" . gitignore-mode))
+
+
+(use-package git-timemachine
+  :bind
+  (("C-x v t" . git-timemachine-toggle))
+  
+  :hook
+  (git-timemachine-mode . display-line-numbers-mode))
+
+
+(use-package magit
+  :bind (("C-c g" . magit-status)
+	 ("C-x g" . magit-status)
+	 ("C-x M-g" . magit-dispatch)
+	 ("C-M-<up>" . magit-section-up)
+	 ("C-M-<down>" . magit-section-down)
+	 :map magit-status-mode-map
+	 ("TAB" . magit-selection-toggle)
+	 ("<C-tab>" . magit-section-cycle)
+	 :map magit-branch-section-map
+	 ("RET" . magit-checkout))
+
+  :hook
+  ((after-save . 'magit-after-save-refresh-status))
+
+  :config
+  (setq ;;magit-use-overlays nil
+        ;;magit-section-visibility-indicator nil
+        ;;magit-completing-read-function 'ivy-completing-read
+        ;;magit-push-always-verify nil
+        magit-repository-directories '("~/Projects/")))
 
 ;;; --- Github integration
 
@@ -1266,7 +1368,7 @@ This is useful when followed by an immediate kill."
 
 ;; Set UTF-8 as the default encoding
 (when (fboundp 'set-charset-priority)
-  (set-charset-priority 'unicode))       
+  (set-charset-priority 'unicode))
 (prefer-coding-system 'utf-8-unix)
 (setq locale-coding-system 'utf-8
       coding-system-for-read 'utf-8

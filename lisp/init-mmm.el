@@ -8,14 +8,14 @@
   :config
   (setq mmm-global-mode 'buffers-with-submode-classes)
   (setq mmm-submode-mode-line-format "~M > [~m]"
-		mmm-primary-mode-display-name t
-		mmm-buffer-mode-display-name t)
+	mmm-primary-mode-display-name t
+	mmm-buffer-mode-display-name t)
   (setq mmm-submode-decoration-level 3)
 
   ;;(mmm-add-mode-ext-classes 'html-mode "\\.php\\'" 'html-php)
 
   (unless (boundp 'editing-prefix)
-	(define-prefix-command 'editing-prefix))
+    (define-prefix-command 'editing-prefix))
   (define-key editing-prefix (kbd "m") 'mmm-mode) ;; enable mmm on region
 
   ;; Submode classes
