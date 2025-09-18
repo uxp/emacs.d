@@ -346,12 +346,41 @@ Selectively runs either `after-make-console-frame-hooks' or
 
 (add-hook 'after-make-console-frame-hooks 'sanityinc/console-frame-setup)
 
-;;; --- Theming
+;;; --- Fonts
+(set-face-attribute 'default nil :font "JetBrains Mono NL Nerd Font")
+(set-frame-font "JetBrains Mono NL Nerd Font" nil t)
 
-(use-package monokai-pro-theme
-  :ensure t
-  :init
-  (load-theme 'monokai-pro t))
+;;(set-face-attribute 'default nil
+;;		    :font "JetBrains Mono NL Nerd Font"
+;;		    :weight 'extrabold
+;;		    :height 110)
+
+;;(set-face-attribute 'fixed-pitch nil
+;;		    :font "JetBrains Mono Nerd Font"
+;;		    :weight 'bold
+;;		    :height 110)
+
+(use-package fira-code-mode
+  :straight t
+  :demand t
+  :hook prog-mode
+  :custom (fira-code-mode-disabled-ligatures '("[]" ":" "x"))
+  :config (fira-code-mode-set-font))
+
+;; Default Windows emoji font
+(when (member "Segoe UI Emoji" (font-family-list))
+  (set-fontset-font t 'symbol (font-spec :family "Segoe UI Emoji") nil 'prepend)
+  (set-fontset-font "fontset-default" '(#xFE00 . #xFE0F) "Segoe UI Emoji"))
+
+(when (member "Noto Color Emoji" (font-family-list))
+  (set-fontset-font t 'symbol (font-spec :family "Noto Color Emoji") nil 'prepend)
+  (set-fontset-font "fontset-default" '(#xFE00 . #xFE0F) "Noto Color Emoji"))
+
+(when (member "Apple Color Emoji" (font-family-list))
+  (set-fontset-font t 'symbol (font-spec :family "Apple Color Emoji") nil 'prepend)
+  (set-fontset-font "fontset-default" '(#xFF00 . #xFE0F) "Apple Color Emoji"))
+
+;;; --- Icons
 
 (use-package nerd-icons)
 
@@ -389,6 +418,13 @@ Selectively runs either `after-make-console-frame-hooks' or
   :init
   (add-to-list 'corfu-margin-formatters #'nerd-icons-corfu-formatter))
 
+;;; --- Theming
+
+(use-package monokai-pro-theme
+  :ensure t
+  :init
+  (load-theme 'monokai-pro t))
+
 ;;; Configuration specific to MacOS
 
 (when *is-macos*
@@ -416,6 +452,48 @@ Selectively runs either `after-make-console-frame-hooks' or
     (define-key nxml-mode-map (kbd "M-h") nil))
   ;; what describe-key reports for cmd-option-h
   (global-set-key (kbd "M-_") 'ns-do-hide-others))
+
+;;; General keybinds
+
+(defun hplogsdon/kill-this-buffer ()
+  (interactive)
+  (catch 'quit
+    (save-window-excursion
+      (let (done)
+	(when (and buffer-file-name (buffer-modified-p))
+	  (while (not done)
+	    (let ((response (read-char-choice
+			     (format "Save file %s? (y, n, d, q) " (buffer-file-name))
+			     '(?y ?n ?d ?q))))
+	      (setq done (cond
+			  ((eq response ?q) (throw 'quit nil))
+			  ((eq response ?y) (save-buffer) t)
+			  ((eq response ?n) (set-buffer-modified-p nil) t)
+			  ((eq response ?d) (diff-buffer-with-file) nil))))))
+	(kill-buffer (current-buffer))))))
+
+(global-set-key [s-tab] 'next-buffer)
+(global-set-key [S-s-iso-lefttab] 'previous-buffer)
+(global-set-key ["M-{"] 'next-buffer)
+(global-set-key ["M-}"] 'previous-buffer)
+
+;; change window
+(global-set-key [(C-tab)] 'other-window)
+(global-set-key [(C-M-tab)] 'other-window)
+
+
+;; Remap kill buffer to this, which asks to diff the buffer or close
+(global-set-key [remap kill-buffer] 'hplogsdon/kill-this-buffer)
+(global-set-key (kbd "C-x k") 'hplogsdon/kill-this-buffer)
+
+;; Revert buffer
+(global-set-key (kbd "C-<f5>") 'revert-buffer)
+
+;; Jump to scratch
+(global-set-key (kbd "C-<f2>") (lambda () (interactive) (switch-to-buffer "*scratch*")))
+
+;; Go to line
+(global-set-key (kbd "M-g") 'goto-line)
 
 ;;; --- Non-TTY frames behavior
 
@@ -570,6 +648,7 @@ This is useful when followed by an immediate kill."
   :commands (ibuffer-current-buffer
              ibuffer-find-file
              ibuffer-do-sort-by-alphabetic)
+
   :preface
   (defvar protected-buffers '("*scratch*" "*Messages*")
 	"Buffers that cannot be killed")
@@ -579,15 +658,20 @@ This is useful when followed by an immediate kill."
 	  (with-current-buffer buffer
 		(emacs-lock-mode 'kill))))
   :init
+  (use-package ibuffer-vc
+    :commands (ibuffer-vc-set-filter-groups-by-vc-root)
+    :custom
+    (ibuffer-vc-skip-if-remote 'nil))
+
   (setq ibuffer-filter-group-name-face '(:inherit (font-lock-string-face bold)))
   (setq ibuffer-formats '((mark modified read-only locked
-                                " " (icon 2 2 :left :elide) (name 18 18 :left :elide)
+                                " " (name 35 35 :left :elide)
                                 " " (size 9 -1 :right)
                                 " " (mode 16 16 :left :elide)
                                 " " filename-and-process)
                           (mark modified read-only vc-status-mini
                                 " " (name 22 22 :left :elide)
-                                " " (size-h 9 -1 :right)
+                                " " (size 9 -1 :right)
                                 " " (mode 14 14 :left :elide)
                                 " " (vc-status 12 12 :left)
                                 " " vc-relative-file)
@@ -687,12 +771,7 @@ This is useful when followed by an immediate kill."
       (select-window (active-minibuffer-window))
     (error "Minibuffer is not active")))
 
-(defun kill-this-buffer ()
-  (interactive)
-  (kill-buffer (current-buffer)))
-
 (bind-key "M-m" 'switch-to-minibuffer)
-(bind-key "C-c C-k" 'kill-this-buffer)
 
 ;; [[file:../Emacs.org::*dabbrev][dabbrev:1]]
 (use-package dabbrev
@@ -786,14 +865,6 @@ This is useful when followed by an immediate kill."
   (tab-always-indent 'complete))
 
 ;;; --- Working with windows within frames
-;;; Commentary:
-;;; Code:
-
-(use-package window
-  :ensure nil
-  :bind
-  (;; Dont ask before killing a buffer.
-   ([remap kill-buffer] . kill-this-buffer)))
 
 ;; Show window number when switching
 (use-package switch-window
@@ -1013,6 +1084,13 @@ This is useful when followed by an immediate kill."
   :custom-face
   (org-agenda-current-time ((t (:foreground "spring green"))))
 
+  :hook ((org-mode . (lambda ()
+		       (set-face-attribute 'org-level-1 nil :height 1.4)
+		       (set-face-attribute 'org-level-2 nil :height 1.3)
+		       (set-face-attribute 'org-level-3 nil :height 1.2)
+		       (set-face-attribute 'org-level-4 nil :height 1.1)
+		       (set-face-attribute 'org-level-5 nil :height 1.1))))
+
   :config
   (unless (version< org-version "9.2")
 	(require 'org-tempo))
@@ -1034,6 +1112,32 @@ This is useful when followed by an immediate kill."
 	(interactive)
 	(org-journal-new-entry t)))
 ;; orgmode:1 ends here
+
+(show-paren-mode 1)
+
+(use-package rainbow-delimiters
+  :straight t
+
+  :hook
+  ((prog-mode . rainbow-delimiters-mode))
+
+  :config
+  ;; set colors to travel through the visual spectrum from red to blue
+  '(rainbow-delimiters-depth-1-face ((t (:foreground "light slate blue"))))
+  '(rainbow-delimiters-depth-2-face ((t (:foreground "cyan"))))
+  '(rainbow-delimiters-depth-3-face ((t (:foreground "lime green"))))
+  '(rainbow-delimiters-depth-4-face ((t (:foreground "yellow green"))))
+  '(rainbow-delimiters-depth-5-face ((t (:foreground "yellow"))))
+  '(rainbow-delimiters-depth-6-face ((t (:foreground "goldenrod"))))
+  '(rainbow-delimiters-depth-7-face ((t (:foreground "dark orange"))))
+  '(rainbow-delimiters-depth-8-face ((t (:foreground "orange red"))))
+  '(rainbow-delimiters-depth-9-face ((t (:foreground "red2")))))
+
+(use-package rainbow-mode
+  :straight t
+  :diminish rainbow-mode "🌈"
+  :hook
+  ((prog-mode . rainbow-mode)))
 
 ;;; --- Paredit mode
 
