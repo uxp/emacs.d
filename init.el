@@ -1,5 +1,3 @@
-;;; --- Description statement
-
 ;;; init.el --- Local Initialization File -*- lexical-binding: t -*-
 ;;; Commentary:
 ;;;   This config targets Emacs 30, and is automatically generated via
