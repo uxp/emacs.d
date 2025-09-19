@@ -315,7 +315,7 @@ region-end are used. Adds the duplicated text to the kill ring."
   "Gets the current quotes character"
   (nth 3 (syntax-ppss)))
 
-(defalias 'point-is-in-string-p 'hpl/current-quotes-character)
+(defalias 'point-is-in-string-p 'hpl/current-quotes-char)
 
 (defun hpl/move-point-forward-out-of-string ()
   (while (point-is-in-string-p) (forward-char)))
@@ -327,7 +327,7 @@ region-end are used. Adds the duplicated text to the kill ring."
   (interactive)
   (if (point-is-in-string-p)
       (let ((old-quotes (char-to-string (hpl/current-quotes-char)))
-	    (new-quotes (char-to-string (hpl/calternate-quotes-char)))
+	    (new-quotes (char-to-string (hpl/alternate-quotes-char)))
 	    (start (make-marker))
 	    (end (make-marker)))
 	(save-excursion
@@ -357,7 +357,7 @@ region-end are used. Adds the duplicated text to the kill ring."
   (interactive)
   (save-excursion
     (beginning-of-buffer)
-    (while (re-search-forward " " nil t)
+    (while (re-search-forward "	" nil t)
       (replace-match " "))
     (hpl/indent-buffer)))
 
@@ -773,11 +773,11 @@ Selectively runs either `after-make-console-frame-hooks' or
    ("C-c o"    . sanityinc/isearch-occur)
    ("C-c C-o"  . sanityinc/isearch-occur)
    :map isearch-mode-map
-   ("<M-down>" . isearch-ring-advance)
-   ("<M-up>"   . isearch-ring-retreat)
+   ("M-<down>" . isearch-ring-advance)
+   ("M-<up>"   . isearch-ring-retreat)
    :map minibuffer-local-isearch-map
-   ("<M-down>" . next-history-element)
-   ("<M-up"    . previous-history-element))
+   ("M-<down>" . next-history-element)
+   ("M-<up>"    . previous-history-element))
 
   :init
   (setq-default isearch-allow-scroll t
@@ -828,58 +828,6 @@ This is useful when followed by an immediate kill."
 	uniquify-separator " • "
 	uniquify-after-kill-buffer-p t
 	uniquify-ignore-buffers-re "^\\*"))
-
-;;; --- iBuffer settings
-
-(use-package ibuffer
-  :ensure nil
-  :bind (("C-x C-b" . ibuffer))
-  :commands (ibuffer-current-buffer
-	     ibuffer-find-file
-	     ibuffer-do-sort-by-alphabetic)
-
-  :preface
-  (defvar protected-buffers '("*scratch*" "*Messages*")
-    "Buffers that cannot be killed")
-  (defun hplogsdon/protected-buffers ()
-    "Protect some buffers from being killed."
-    (dolist (buffer protected-buffers)
-      (with-current-buffer buffer
-	(emacs-lock-mode 'kill))))
-  :init
-  (use-package ibuffer-vc
-    :commands (ibuffer-vc-set-filter-groups-by-vc-root)
-    :custom
-    (ibuffer-vc-skip-if-remote 'nil))
-
-  (setq ibuffer-filter-group-name-face '(:inherit (font-lock-string-face bold)))
-  (setq ibuffer-formats '((mark modified read-only locked
-				" " (name 35 35 :left :elide)
-				" " (size 9 -1 :right)
-				" " (mode 16 16 :left :elide)
-				" " filename-and-process)
-			  (mark modified read-only vc-status-mini
-				" " (name 22 22 :left :elide)
-				" " (size 9 -1 :right)
-				" " (mode 14 14 :left :elide)
-				" " (vc-status 12 12 :left)
-				" " vc-relative-file)
-			  (mark " " (name 16 -1) " " filename)))
-  (setq ibuffer-saved-filter-groups '(("default"
-				       ("org" (or (mode .org-mode) (name . "^\\Org Mode")))
-				       ("emacs" (or (name . "^\\*scratch\\*$") (name . "\\*Messages\\*$")))
-				       ("dired" (mode . dired-mode))
-				       ("terminal" (name . "^\\*Help\\*$")))))
-  (hplogsdon/protected-buffers)
-  :config
-  (add-hook 'ibuffer-mode-hook
-	    (lambda ()
-	      (ibuffer-switch-to-saved-filter-groups "default")
-	      (ibuffer-update nil t)
-	      (ibuffer-auto-mode 1)))
-
-
-  (setq ibuffer-show-empty-filter-groups nil))
 
 ;;; --- Configure flymake global behavior
 
@@ -1087,7 +1035,7 @@ This is useful when followed by an immediate kill."
    ("C-S-h" . #'buf-move-left )
    ("C-S-j" . #'buf-move-down)
    ("C-S-k" . #'buf-move-up)
-   ("C-S-l" . #'buf-moce-right)))
+   ("C-S-l" . #'buf-move-right)))
 
 ;;; --- Save and restore editor sessions between restarts
 
@@ -1360,21 +1308,57 @@ This is useful when followed by an immediate kill."
 
 ;;; --- Gitlab Integration
 
-;;; --- ibuffer defaults
+;;; --- iBuffer settings
+
 (use-package ibuffer
   :ensure nil
   :bind (("C-x C-b" . ibuffer))
-  :custom
-  (ibuffer-show-empty-filter-groups nil)
-  (ibuffer-saved-filter-groups
-   '(("default"
-      ("org" (or (mode . org-mode) (name . "^\\*Org Src")))
-      ("emacs" (or (name . "^\\*scratch\\*$") (name . "^\\*Messages\\*$")))
-      ("dired" (mode . dired-mode))
-      ("help" (or (name . "^\\*Help\\*$") (name . "^\\*helpful"))))))
-  :hook
-  ((ibuffer-mode . (lambda ()
-		     (ibuffer-switch-to-saved-filter-groups "default")))))
+  :commands (ibuffer-current-buffer
+	     ibuffer-find-file
+	     ibuffer-do-sort-by-alphabetic)
+
+  :preface
+  (defvar protected-buffers '("*scratch*" "*Messages*")
+    "Buffers that cannot be killed")
+  (defun hplogsdon/protected-buffers ()
+    "Protect some buffers from being killed."
+    (dolist (buffer protected-buffers)
+      (with-current-buffer buffer
+	(emacs-lock-mode 'kill))))
+  :init
+  (use-package ibuffer-vc
+    :commands (ibuffer-vc-set-filter-groups-by-vc-root)
+    :custom
+    (ibuffer-vc-skip-if-remote 'nil))
+
+  (setq ibuffer-filter-group-name-face '(:inherit (font-lock-string-face bold)))
+  (setq ibuffer-formats '((mark modified read-only locked
+				" " (name 35 35 :left :elide)
+				" " (size 9 -1 :right)
+				" " (mode 16 16 :left :elide)
+				" " filename-and-process)
+			  (mark modified read-only vc-status-mini
+				" " (name 22 22 :left :elide)
+				" " (size 9 -1 :right)
+				" " (mode 14 14 :left :elide)
+				" " (vc-status 12 12 :left)
+				" " vc-relative-file)
+			  (mark " " (name 16 -1) " " filename)))
+  (setq ibuffer-saved-filter-groups '(("default"
+				       ("org" (or (mode .org-mode) (name . "^\\Org Mode")))
+				       ("emacs" (or (name . "^\\*scratch\\*$") (name . "\\*Messages\\*$")))
+				       ("dired" (mode . dired-mode))
+				       ("terminal" (name . "^\\*Help\\*$")))))
+  (hplogsdon/protected-buffers)
+  :config
+  (add-hook 'ibuffer-mode-hook
+	    (lambda ()
+	      (ibuffer-switch-to-saved-filter-groups "default")
+	      (ibuffer-update nil t)
+	      (ibuffer-auto-mode 1)))
+
+
+  (setq ibuffer-show-empty-filter-groups nil))
 
 ;;; --- Projectile Project configuration
 (use-package projectile
@@ -1412,7 +1396,7 @@ This is useful when followed by an immediate kill."
   ((ibuffer . (lambda ()
 		(ibuffer-projectile-set-filter-groups)
 		(unless (eq ibuffer-sorting-mode 'alphabetic)
-		  (ibuffer-do-sort-by-alphabetic)))))
+		  (ibuffer-do-sort-by-alphabetic))))))
 
 ;; [[file:../Emacs.org::*orgmode][orgmode:1]]
 ;;; --- Org Mode Configuration
@@ -1423,7 +1407,7 @@ This is useful when followed by an immediate kill."
   :defer t
   :bind (("C-c a" . org-agenda)
 	 ("C-c c" . org-capture)
-	 ;;("C-c j" . org-journal)
+	;("C-c j" . org-journal)
 	 (:map org-mode-map
 	       (("M-p" . outline-previous-visible-heading)
 		("M-n" . outline-next-visible-heading)
@@ -1457,14 +1441,15 @@ This is useful when followed by an immediate kill."
 		       (set-face-attribute 'org-level-5 nil :height 1.1))))
 
   :config
-  (unless (version< org-version "9.2")
+  (unless (version<= org-version "9.2")
     (require 'org-tempo))
+
   (when (or (file-directory-p "~/org/agenda") (file-directory-p "~/org/journal"))
     (setq org-agenda-files (list "~/org/agenda" "~/org/journal"))))
 
 (use-package org-journal
   :bind (("C-c j n" . org-journal-new-entry)
-	 ("C-c j t" . org-journal-today))
+	 ("C-c j t" . hpl/org-journal-today))
 
   :custom
   (org-journal-date-prefix "#+TITLE: ")
@@ -1473,7 +1458,7 @@ This is useful when followed by an immediate kill."
   (org-journal-date-format "%Y-%m-%d")
 
   :config
-  (defun org-journal-today ()
+  (defun hpl/org-journal-today ()
     (interactive)
     (org-journal-new-entry t)))
 ;; orgmode:1 ends here
@@ -1713,8 +1698,8 @@ This is useful when followed by an immediate kill."
 ;;; init.el ends here
 ;; Footer:1 ends here
 
-(provide 'init)
 ;; Local Variables:
 ;; coding: utf-8-unix
 ;; no-byte-compile: t
 ;; End:
+(provide 'init)
