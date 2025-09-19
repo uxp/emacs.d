@@ -17,7 +17,7 @@
 
 (let ((minver "29.1"))
   (when (version< emacs-version minver)
-        (error "Emacs is too old.")))
+    (error "Emacs is too old.")))
 
 ;; Add the `lisp' directory
 (add-to-list 'load-path (expand-file-name "lisp" user-emacs-directory))
@@ -38,14 +38,14 @@ LOAD-DURATION is the time taken in milliseconds to load FEATURE.")
 (defun sanityinc/require-times-wrapper (orig feature &rest args)
   "Note in `sanityinc/require-times' the time taken to require each feature."
   (let* ((already-loaded (memq feature features))
-		 (require-start-time (and (not already-loaded) (current-time))))
-	(prog1
-		(apply orig feature args)
-	  (when (and (not already-loaded) (memq feature features))
-		(let ((time (sanityinc/time-subtract-millis (current-time) require-start-time)))
-		  (add-to-list 'sanityinc/require-times
-					   (list feature require-start-time time)
-					   t))))))
+	 (require-start-time (and (not already-loaded) (current-time))))
+    (prog1
+	(apply orig feature args)
+      (when (and (not already-loaded) (memq feature features))
+	(let ((time (sanityinc/time-subtract-millis (current-time) require-start-time)))
+	  (add-to-list 'sanityinc/require-times
+		       (list feature require-start-time time)
+		       t))))))
 
 
 (advice-add 'require :around 'sanityinc/require-times-wrapper)
@@ -53,15 +53,15 @@ LOAD-DURATION is the time taken in milliseconds to load FEATURE.")
 (define-derived-mode sanityinc/require-times-mode tabulated-list-mode "Require-Times"
   "Show times taken to `require' package"
   (setq tabulated-list-format
-		[("Start time (ms)" 20 sanityinc/require-times-sort-by-start-time-pred)
-		 ("Feature" 30)
-		 ("Time (ms)" 12 sanityinc/require-times-sort-by-load-time-pred)])
+	[("Start time (ms)" 20 sanityinc/require-times-sort-by-start-time-pred)
+	 ("Feature" 30)
+	 ("Time (ms)" 12 sanityinc/require-times-sort-by-load-time-pred)])
   (setq tabulated-list-sort-key (cons "Start time (ms)" nil))
   (setq tabulated-list-padding 2)
   (setq tabulated-list-entries #'sanityinc/require-times-tabulated-list-entries)
   (tabulated-list-init-header)
   (when (fboundp 'tablist-minor-mode)
-	(tablist-minor-mode)))
+    (tablist-minor-mode)))
 
 
 (defun sanityinc/require-times-sort-by-start-time-pred (entry1 entry2)
@@ -89,9 +89,9 @@ LOAD-DURATION is the time taken in milliseconds to load FEATURE.")
   "Show a tabular view of how long various libraries took to load."
   (interactive)
   (with-current-buffer (get-buffer-create "*Require Times*")
-		       (sanityinc/require-times-mode)
-		       (tabulated-list-revert)
-		       (display-buffer (current-buffer))))
+    (sanityinc/require-times-mode)
+    (tabulated-list-revert)
+    (display-buffer (current-buffer))))
 
 (defun sanityinc/show-init-time ()
   (message "init completed in %.2fms"
@@ -100,7 +100,7 @@ LOAD-DURATION is the time taken in milliseconds to load FEATURE.")
 (add-hook 'after-init-hook 'sanityinc/show-init-time)
 ;; Benchmarking:1 ends here
 
-;; [[file:../Emacs.org::*Helper functions][Helper functions:1]]
+;; [[file:../Emacs.org::*Defines][Defines:1]]
 ;;; --- Helpful defines and functions
 (setq *spell-check-support-enabled* nil) ;; Enable with 't if you prefer
 
@@ -108,25 +108,13 @@ LOAD-DURATION is the time taken in milliseconds to load FEATURE.")
 (setq *is-windows* (memq system-type '(windows-nt ms-dos cygwin)))
 (setq *is-linux* (eq system-type 'gnu/linux))
 
-(defun hplogsdon/reload-user-init-file ()
-  "Reload the init file"
-  (interactive)
-  (load-file user-init-file))
-
-(defun hplogsdon/find-init-file ()
-  (interactive)
-  (let ((this-init-file "~/.emacs.d/init.el"))
-	(find-file this-init-file)))
-
-(bind-key "C-c l" 'hplogsdon/reload-user-init-file)
-
 ;; Adjust garbage collection threshold for early startup (see gcmh below)
 (setq gc-cons-threshold (* 128 1024 1024))
 
 ;; Process performance tuning
 (setq read-process-output-max (* 4 1024 1024))
 (setq process-adaptive-read-buffering nil)
-;; Helper functions:1 ends here
+;; Defines:1 ends here
 
 ;; [[file:../Emacs.org::*Bootstrapping][Bootstrapping:1]]
 ;;; --- Bootstrap stuff.
@@ -149,9 +137,11 @@ LOAD-DURATION is the time taken in milliseconds to load FEATURE.")
         which-function-mode
         ))
 
+
+;; The following is probably unused, but I'm not deleting it yet.
 ;;; Standard package repositories
 (setq package-user-dir (expand-file-name (format "elpa-%s.%s" emacs-major-version emacs-minor-version)
-                                                 user-emacs-directory)
+                                         user-emacs-directory)
       package-archives '(("melpa-stable" . "https://stable.melpa.org/packages/")
                          ("orgmode"      . "https://orgmode.org/elpa/")
                          ("nongnu"       . "https://elpa.nongnu.org/nongnu/")
@@ -171,12 +161,12 @@ LOAD-DURATION is the time taken in milliseconds to load FEATURE.")
         "straight/repos/straight.el/bootstrap.el"
         (or (bound-and-true-p straight-base-dir)
             user-emacs-directory)))
-       (bootstrap-version 7))
+      (bootstrap-version 7))
   (unless (file-exists-p bootstrap-file)
     (with-current-buffer
         (url-retrieve-synchronously
-          "https://radian-software.github.io/straight.el/install.el"
-          'silent 'inhibit-cookies)
+         "https://radian-software.github.io/straight.el/install.el"
+         'silent 'inhibit-cookies)
       (goto-char (point-max))
       (eval-print-last-sexp)))
   (load bootstrap-file nil 'nomessage))
@@ -194,9 +184,23 @@ LOAD-DURATION is the time taken in milliseconds to load FEATURE.")
   :ensure t)
 ;; Package helpers:1 ends here
 
-;; [[file:../Emacs.org::*Helper functions and commands][Helper functions and commands:1]]
+;; [[file:../Emacs.org::*Init file helpers][Init file helpers:1]]
 ;;; --- Emacs-Lisp helper functions and commands
 
+(defun hpl/reload-user-init-file ()
+  "Reload the init file"
+  (interactive)
+  (load-file user-init-file))
+
+(defun hpl/find-init-file ()
+  (interactive)
+  (let ((this-init-file "~/.emacs.d/init.el"))
+    (find-file this-init-file)))
+
+(bind-key "C-c C-<f5>" 'hpl/reload-user-init-file)
+;; Init file helpers:1 ends here
+
+;; [[file:../Emacs.org::*Delete files][Delete files:1]]
 ;; Delete the current file
 (defun delete-this-file ()
   "Delete the current file, and kill the buffer."
@@ -207,7 +211,6 @@ LOAD-DURATION is the time taken in milliseconds to load FEATURE.")
                              (file-name-nondirectory buffer-file-name)))
     (delete-file (buffer-file-name))
     (kill-this-buffer)))
-
 
 ;; Rename the current file
 (if (fboundp 'rename-visited-file)
@@ -224,7 +227,142 @@ LOAD-DURATION is the time taken in milliseconds to load FEATURE.")
           (rename-file filename new-name 1))
         (set-visited-file-name new-name)
         (rename-buffer new-name)))))
-;; Helper functions and commands:1 ends here
+;; Delete files:1 ends here
+
+;; [[file:../Emacs.org::*DWIM Capitalization][DWIM Capitalization:1]]
+;; Capitalize current word or all words in region
+(defun hpl/capitalization-dwim ()
+  "Capitalize all words in region or point."
+  (interactive)
+  (if (region-active-p)
+      (save-excursion (capitalize-region (region-beginning) (region-end)))
+    (capitalize-word 1)))
+
+;; Upcase current word or region
+(defun hpl/upcase-dwim ()
+  "Upcase all words in region or point."
+  (interactive)
+  (if (region-active-p)
+      (save-excursion (upcase-region (region-beginning) (region-end)))
+    (upcase-word 1)))
+
+(defun hpl/downcase-dwim ()
+  "Downcase all words in region or point."
+  (interactive)
+  (if (region-active-p)
+      (save-excursion (downcase-region (region-beginning) (region-end)))
+    (downcase-word 1)))
+
+;; bind keys from table
+;; DWIM Capitalization:1 ends here
+
+;; [[file:../Emacs.org::*Duplication][Duplication:1]]
+(defun hpl/duplicate-current-line-or-region (arg)
+  "Duplicate the current line or region ARG times.
+If there is no region, the current line will be duplicated."
+  (interactive "p")
+  (save-excursion
+    (if (region-active-p)
+	(hpl/duplicate-region arg)
+      (hpl/duplicate-current-line arg))))
+
+(defun hpl/duplicate-region (num &optional start end)
+  "Duplicates the region bounded by START and END NUM times.
+If not START and END are provided, the current region-beginning and
+region-end are used. Adds the duplicated text to the kill ring."
+  (interactive "p")
+  (let* ((start (or start (region-beginning)))
+	 (end (or end (region-end)))
+	 (region (buffer-substring start end)))
+    (kill-ring-save start end)
+    (goto-char start)
+    (dotimes (i num)
+      (insert region))))
+
+(defun hpl/duplicate-current-line (num)
+  "Duplicates the current line NUM times."
+  (interactive "p")
+  (when (eq (point-at-eol) (point-max))
+    (goto-char (point-max))
+    (newline)
+    (forward-char -1))
+  (hpl/duplicate-region num (point-at-bol) (1+ (point-at-eol))))
+
+;; bind keys from table
+;; Duplication:1 ends here
+
+;; [[file:../Emacs.org::*New lines][New lines:1]]
+(defun hpl/open-line-below ()
+  "Opens a line below the point."
+  (interactive)
+  (end-of-line)
+  (newline)
+  (indent-for-tab-command))
+
+(defun hpl/open-line-above ()
+  "Open a line above the point."
+  (interactive)
+  (beginning-of-line)
+  (newline)
+  (forward-line -1)
+  (indent-for-tab-command))
+
+;; bind keys from table
+;; New lines:1 ends here
+
+;; [[file:../Emacs.org::*Quoting regions][Quoting regions:1]]
+(defun hpl/current-quotes-char ()
+  "Gets the current quotes character"
+  (nth 3 (syntax-ppss)))
+
+(defalias 'point-is-in-string-p 'hpl/current-quotes-character)
+
+(defun hpl/move-point-forward-out-of-string ()
+  (while (point-is-in-string-p) (forward-char)))
+
+(defun hpl/move-point-backward-out-of-string ()
+  (while (point-is-in-string-p) (backward-char)))
+
+(defun hpl/toggle-quotes ()
+  (interactive)
+  (if (point-is-in-string-p)
+      (let ((old-quotes (char-to-string (hpl/current-quotes-char)))
+	    (new-quotes (char-to-string (hpl/calternate-quotes-char)))
+	    (start (make-marker))
+	    (end (make-marker)))
+	(save-excursion
+	  (hpl/move-point-forward-out-of-string)
+	  (backward-delete-char 1)
+	  (set-marker end (point))
+	  (insert new-quotes)
+	  (hpl/move-point-backward-out-of-string)
+	  (delete-char 1)
+	  (insert new-quotes)
+	  (set-marker start (point))
+	  (replace-string new-quotes (concat "\\" new-quotes) nil start end)
+	  (replace-string (concat "\\" old-quotes) old-quotes nil start end)))
+    (error "Point isn't in a string")))
+
+;; bind-keys-from-table
+;; Quoting regions:1 ends here
+
+;; [[file:../Emacs.org::*Whitespace][Whitespace:1]]
+(defun hpl/indent-buffer ()
+  "Indent the current buffer."
+  (interactive)
+  (indent-region (point-min) (point-max)))
+
+(defun hpl/cleanup-whitespace ()
+  "Replace tabs and indent buffer."
+  (interactive)
+  (save-excursion
+    (beginning-of-buffer)
+    (while (re-search-forward " " nil t)
+      (replace-match " "))
+    (hpl/indent-buffer)))
+
+(bind-key "C-c w" 'hpl/cleanup-whitespace)
+;; Whitespace:1 ends here
 
 ;; [[file:../Emacs.org::*Lisp directory (aka, `vendor')][Lisp directory (aka, `vendor'):1]]
 ;;; --- Support elisp manually installed in the site-lisp dir
@@ -239,11 +377,11 @@ LOAD-DURATION is the time taken in milliseconds to load FEATURE.")
   "Add every non-hidden subdir of PARENT-DIR to `load-path'."
   (let ((default-directory parent-dir))
     (setq load-path
-          (append
-           (cl-remove-if-not
-            #'file-directory-p
-            (directory-files (expand-file-name parent-dir) t "^[^\\.]"))
-           load-path))))
+	  (append
+	   (cl-remove-if-not
+	    #'file-directory-p
+	    (directory-files (expand-file-name parent-dir) t "^[^\\.]"))
+	   load-path))))
 
 ;; Add both site-lisp and its immediate subdirs to `load-path'
 (let ((site-lisp-dir (expand-file-name "site-lisp/" user-emacs-directory)))
@@ -282,8 +420,8 @@ under ~/.emacs.d/site-lisp/NAME"
 ;;; --- Setup exec-path to help Emacs find packages
 
 (when (or (memq window-system '(mac ns x pgtk))
-          (unless (memq system-type '(ms-dos windows-nt))
-            (daemonp)))
+	  (unless (memq system-type '(ms-dos windows-nt))
+	    (daemonp)))
   (use-package exec-path-from-shell
     :ensure t
     :pin melpa-stable
@@ -324,8 +462,8 @@ Selectively runs either `after-make-console-frame-hooks' or
 `after-make-window-system-frame-hooks'."
   (with-selected-frame frame
     (run-hooks (if window-system
-                   'after-make-window-system-frame-hooks
-                 'after-make-console-frame-hooks))))
+		   'after-make-window-system-frame-hooks
+		 'after-make-console-frame-hooks))))
 
 (add-hook 'after-make-frame-functions 'run-after-make-frame-hooks)
 
@@ -333,8 +471,8 @@ Selectively runs either `after-make-console-frame-hooks' or
   "The frame (if any) active during Emacs initialization.")
 
 (add-hook 'after-init-hook
-          (lambda () (when sanityinc/initial-frame
-                  (run-after-make-frame-hooks sanityinc/initial-frame))))
+	  (lambda () (when sanityinc/initial-frame
+		       (run-after-make-frame-hooks sanityinc/initial-frame))))
 
 ;;; --- Integrate with terminals such as xterm
 
@@ -352,23 +490,23 @@ Selectively runs either `after-make-console-frame-hooks' or
 
 ;;; --- Fonts
 (if *is-macos*
-  (progn
-    (set-face-attribute 'default nil :font "JetBrainsMonoNL Nerd Font")
-    (set-frame-font "JetBrainsMonoNL Nerd Font" nil t))
+    (progn
+      (set-face-attribute 'default nil :font "JetBrainsMonoNL Nerd Font")
+      (set-frame-font "JetBrainsMonoNL Nerd Font" nil t))
   (progn
     (set-face-attribute 'default nil :font "JetBrains Mono NL Nerd Font")
     (set-frame-font "JetBrains Mono NL Nerd Font" nil t)))
 
 
 ;;(set-face-attribute 'default nil
-;;		    :font "JetBrains Mono NL Nerd Font"
-;;		    :weight 'extrabold
-;;		    :height 110)
+;;      :font "JetBrains Mono NL Nerd Font"
+;;      :weight 'extrabold
+;;      :height 110)
 
 ;;(set-face-attribute 'fixed-pitch nil
-;;		    :font "JetBrains Mono Nerd Font"
-;;		    :weight 'bold
-;;		    :height 110)
+;;      :font "JetBrains Mono Nerd Font"
+;;      :weight 'bold
+;;      :height 110)
 
 (use-package fira-code-mode
   :straight t
@@ -431,8 +569,15 @@ Selectively runs either `after-make-console-frame-hooks' or
 
 ;;; --- Line Numbers
 
-(column-number-mode)
+(setq column-number-mode t)
+(setq line-number-mode t)
 (global-display-line-numbers-mode t)
+
+;; Defaults to 70. 80 is better.
+(setq fill-column 80)
+
+;; Sentences do not need double spaces to end.
+(set-default 'sentence-end-double-space nil)
 
 ;; disable line numbers where they don't make sense or arent useful.
 (dolist (mode '(org-mode-hook
@@ -449,6 +594,46 @@ Selectively runs either `after-make-console-frame-hooks' or
   :init
   (load-theme 'monokai-pro t))
 
+;;; --- Non-TTY frames behavior
+
+;; Stop C-z frame
+(defun sanityinc/maybe-suspend-frame ()
+  (interactive)
+  (unless (and *is-macos* window-system)
+    (suspend-frame)))
+
+(global-set-key (kbd "C-z") 'sanityinc/maybe-suspend-frame)
+
+
+;; Suppress GUI features
+(setq use-file-dialog nil)
+(setq use-dialog-box nil)
+(setq inhibit-startup-screen t)
+
+;; Window size and features
+(setq-default window-resize-pixelwise t
+	      frame-resize-pixelwise t)
+
+(when (fboundp 'tool-bar-mode)
+  (tool-bar-mode -1))
+(when (fboundp 'set-scroll-mode)
+  (set-scroll-mode nil))
+
+(menu-bar-mode -1)
+
+(defun hpl/transparency (value &optional frame)
+  "Sets the transparency of the frame window. 0=transparent/100=opaque"
+  (interactive "nTransparency Value 0-100 opaque:")
+  (let ((frame (or frame (selected-frame))))
+    (set-frame-parameter frame 'alpha value)))
+
+(defun hpl/set-frame-transparency (&optional frame)
+  "Sets the transparency on the selected frame."
+  (hpl/transparency 98 frame))
+
+(add-hook 'after-make-frame-functions 'hpl/set-frame-transparency)
+(add-hook 'after-init-hook 'hpl/set-frame-transparency)
+
 ;;; Configuration specific to MacOS
 
 (when *is-macos*
@@ -461,8 +646,8 @@ Selectively runs either `after-make-console-frame-hooks' or
 
   ;; Make mouse wheel / trackpad scrolling less jerky
   (setq mouse-wheel-scroll-amount '(1
-                                    ((shift) . 5)
-                                    ((control))))
+				    ((shift) . 5)
+				    ((control))))
   (dolist (multiple '("" "double-" "triple-"))
     (dolist (direction '("right" "left"))
       (global-set-key (read-kbd-macro (concat "<" multiple "wheel-" "direction" ">")) 'ignore)))
@@ -505,7 +690,6 @@ Selectively runs either `after-make-console-frame-hooks' or
 (global-set-key [(C-tab)] 'other-window)
 (global-set-key [(C-M-tab)] 'other-window)
 
-
 ;; Remap kill buffer to this, which asks to diff the buffer or close
 (global-set-key [remap kill-buffer] 'hplogsdon/kill-this-buffer)
 (global-set-key (kbd "C-x k") 'hplogsdon/kill-this-buffer)
@@ -519,33 +703,14 @@ Selectively runs either `after-make-console-frame-hooks' or
 ;; Go to line
 (global-set-key (kbd "M-g") 'goto-line)
 
-;;; --- Non-TTY frames behavior
+(setq shift-select-mode nil)
 
-;; Stop C-z frame
-(defun sanityinc/maybe-suspend-frame ()
-  (interactive)
-  (unless (and *is-macos* window-system)
-    (suspend-frame)))
-
-(global-set-key (kbd "C-z") 'sanityinc/maybe-suspend-frame)
-
-
-;; Suppress GUI features
-(setq use-file-dialog nil)
-(setq use-dialog-box nil)
-(setq inhibit-startup-screen t)
-
-
-;; Window size and features
-(setq-default window-resize-pixelwise t
-              frame-resize-pixelwise t)
-
-(when (fboundp 'tool-bar-mode)
-  (tool-bar-mode -1))
-(when (fboundp 'set-scroll-mode)
-  (set-scroll-mode nil))
-
-(menu-bar-mode -1)
+;;  (global-unset-key [up])
+;;  (global-unset-key [down])
+;;  (global-unset-key [left])
+;;  (global-unset-key [right])
+;;  (global-unset-key [M-left])
+;;  (global-unset-key [M-right])
 
 ;;; --- Dired customization
 
@@ -644,25 +809,25 @@ This is useful when followed by an immediate kill."
 
 (when (executable-find "ag")
   (use-package ag
-	:init
-	(setq-default ag-highlight-search t)
-	:bind
-	(("M-?" . ag-project)))
+    :init
+    (setq-default ag-highlight-search t)
+    :bind
+    (("M-?" . ag-project)))
   (use-package wgrep-ag))
 
 (when (executable-find "rg")
   (use-package rg
-	:bind
-	(("M-?" . rg-project))))
+    :bind
+    (("M-?" . rg-project))))
 
 ;;; --- Configure uniquification of buffer name
 
 (use-package uniquify
   :config
   (setq uniquify-buffer-name-style 'reverse
-        uniquify-separator " • "
-        uniquify-after-kill-buffer-p t
-        uniquify-ignore-buffers-re "^\\*"))
+	uniquify-separator " • "
+	uniquify-after-kill-buffer-p t
+	uniquify-ignore-buffers-re "^\\*"))
 
 ;;; --- iBuffer settings
 
@@ -670,17 +835,17 @@ This is useful when followed by an immediate kill."
   :ensure nil
   :bind (("C-x C-b" . ibuffer))
   :commands (ibuffer-current-buffer
-             ibuffer-find-file
-             ibuffer-do-sort-by-alphabetic)
+	     ibuffer-find-file
+	     ibuffer-do-sort-by-alphabetic)
 
   :preface
   (defvar protected-buffers '("*scratch*" "*Messages*")
-	"Buffers that cannot be killed")
+    "Buffers that cannot be killed")
   (defun hplogsdon/protected-buffers ()
-	"Protect some buffers from being killed."
-	(dolist (buffer protected-buffers)
-	  (with-current-buffer buffer
-		(emacs-lock-mode 'kill))))
+    "Protect some buffers from being killed."
+    (dolist (buffer protected-buffers)
+      (with-current-buffer buffer
+	(emacs-lock-mode 'kill))))
   :init
   (use-package ibuffer-vc
     :commands (ibuffer-vc-set-filter-groups-by-vc-root)
@@ -689,29 +854,29 @@ This is useful when followed by an immediate kill."
 
   (setq ibuffer-filter-group-name-face '(:inherit (font-lock-string-face bold)))
   (setq ibuffer-formats '((mark modified read-only locked
-                                " " (name 35 35 :left :elide)
-                                " " (size 9 -1 :right)
-                                " " (mode 16 16 :left :elide)
-                                " " filename-and-process)
-                          (mark modified read-only vc-status-mini
-                                " " (name 22 22 :left :elide)
-                                " " (size 9 -1 :right)
-                                " " (mode 14 14 :left :elide)
-                                " " (vc-status 12 12 :left)
-                                " " vc-relative-file)
-                          (mark " " (name 16 -1) " " filename)))
+				" " (name 35 35 :left :elide)
+				" " (size 9 -1 :right)
+				" " (mode 16 16 :left :elide)
+				" " filename-and-process)
+			  (mark modified read-only vc-status-mini
+				" " (name 22 22 :left :elide)
+				" " (size 9 -1 :right)
+				" " (mode 14 14 :left :elide)
+				" " (vc-status 12 12 :left)
+				" " vc-relative-file)
+			  (mark " " (name 16 -1) " " filename)))
   (setq ibuffer-saved-filter-groups '(("default"
-                                       ("org" (or (mode .org-mode) (name . "^\\Org Mode")))
-                                       ("emacs" (or (name . "^\\*scratch\\*$") (name . "\\*Messages\\*$")))
-                                       ("dired" (mode . dired-mode))
-                                       ("terminal" (name . "^\\*Help\\*$")))))
+				       ("org" (or (mode .org-mode) (name . "^\\Org Mode")))
+				       ("emacs" (or (name . "^\\*scratch\\*$") (name . "\\*Messages\\*$")))
+				       ("dired" (mode . dired-mode))
+				       ("terminal" (name . "^\\*Help\\*$")))))
   (hplogsdon/protected-buffers)
   :config
   (add-hook 'ibuffer-mode-hook
-             (lambda ()
-               (ibuffer-switch-to-saved-filter-groups "default")
-               (ibuffer-update nil t)
-               (ibuffer-auto-mode 1)))
+	    (lambda ()
+	      (ibuffer-switch-to-saved-filter-groups "default")
+	      (ibuffer-update nil t)
+	      (ibuffer-auto-mode 1)))
 
 
   (setq ibuffer-show-empty-filter-groups nil))
@@ -722,10 +887,10 @@ This is useful when followed by an immediate kill."
   :ensure nil
   :hook (prog-mode . flymake-mode)
   :bind (:map flymake-mode-map
-              ("C-c l" . flymake-show-buffer-diagnostics)
-              ("C-c n" . flymake-goto-next-error)
-              ("C-c p" . flymake-goto-prev-error)
-              ("C-c c" . flymake-start)))
+	      ("C-c l" . flymake-show-buffer-diagnostics)
+	      ("C-c n" . flymake-goto-next-error)
+	      ("C-c p" . flymake-goto-prev-error)
+	      ("C-c c" . flymake-start)))
 
 ;;; --- Cross Reference (xref) configuration
 
@@ -733,9 +898,9 @@ This is useful when followed by an immediate kill."
   :straight t
   :defer t
   :bind (("s-[" . #'xref-go-back)
-         ("s-]" . #'xref-go-forward)
-         ("C-c r" . #'xref-find-references)
-         ("C-c d" . #'xref-find-definitions))
+	 ("s-]" . #'xref-go-forward)
+	 ("C-c r" . #'xref-find-references)
+	 ("C-c d" . #'xref-find-definitions))
   :config (add-to-list 'xref-prompt-for-identifier #'xref-find-references 'append)
   :custom
   (xref-auto-jump-to-first-xref t))
@@ -748,18 +913,18 @@ This is useful when followed by an immediate kill."
 	 (python-mode    . eglot-ensure)
 	 (python-ts-mode . eglot-ensure)
 	 (clojure-mode   . eglot-ensure))
-;; turn off custom binds for now
-;;:bind (:map eglot-mode-map
-;;       ("C-c l c" . eglot-connect)
-;;       ("C-c l d" . flymake-show-buffer-diagnostics)
-;;       ("C-c l r" . eglot-rename)
-;;       ("C-c l f" . eglot-format)
-;;       ("C-c l F" . eglot-format-buffer)
-;;       ("C-c l l" . eglot)
-;;       ("C-c l i" . eglot-inlay-hints-mode)
-;;       ("C-c l s" . eglot-shutdown)
-;;       ("C-c l C" . eglot-code-actions))
-  
+  ;; turn off custom binds for now
+  ;;:bind (:map eglot-mode-map
+  ;;       ("C-c l c" . eglot-connect)
+  ;;       ("C-c l d" . flymake-show-buffer-diagnostics)
+  ;;       ("C-c l r" . eglot-rename)
+  ;;       ("C-c l f" . eglot-format)
+  ;;       ("C-c l F" . eglot-format-buffer)
+  ;;       ("C-c l l" . eglot)
+  ;;       ("C-c l i" . eglot-inlay-hints-mode)
+  ;;       ("C-c l s" . eglot-shutdown)
+  ;;       ("C-c l C" . eglot-code-actions))
+
   :custom
   (eglot-autoshutdown t)
   (eglot-send-changes-idle-time 0.1)
@@ -778,13 +943,13 @@ This is useful when followed by an immediate kill."
   :init (recentf-mode)
   :config
   (setq recentf-max-saved-items 200
-        recentf-auto-cleanup 300
-        recentf-exclude (list "\\.git/.*\\'"  ; Git contents
-                              "/elpa/.*\\'"   ; Package files
-                              ".*\\.gz\\'"
-                              "TAGS"
-                              (concat package-user-dir "/.*-autoloads\\.el\\'")
-                              "ido.last")))
+	recentf-auto-cleanup 300
+	recentf-exclude (list "\\.git/.*\\'"  ; Git contents
+			      "/elpa/.*\\'"   ; Package files
+			      ".*\\.gz\\'"
+			      "TAGS"
+			      (concat package-user-dir "/.*-autoloads\\.el\\'")
+			      "ido.last")))
 
 ;;;  ---
 
@@ -816,39 +981,39 @@ This is useful when followed by an immediate kill."
   :ensure nil
   :bind ([remap dabbrev-expand] . hippie-expand)
   :commands (hippie-expand)
-  
+
   :init
   (defadvice hippie-expand (around hippie-expand-case-fold activate)
     "Try to do case-sensitive matching (not effective with all functions)."
     (let ((case-fold-search nil))
       ad-do-it))
-  
+
   :config
   (setq hippie-expand-try-functions-list
-        '(;; Try to expand word "dynamically", searching just the current buffer
-          try-expand-dabbrev
-          ;; Try to expand word "dynamically", searching ...?
-          try-expand-dabbrev-visible
-          ;; Try to expand word "dynamically", searching all other buffers.
-          try-expand-dabbrev-all-buffers
-          ;; Try to expand word "dynamically", searching the kill ring
-          try-expand-dabbrev-from-kill
-          ;; Try to complete text as a filename, as many characters are unique
-          try-complete-file-name-partially
-          ;; Try to complete text as a filename.
-          try-complete-file-name
-          ;; Try to complete before point according to all abbrev tables.
-          try-expand-all-abbrevs
-          ;; Try to complete the current line to a list in the buffer
-          try-expand-list
-          ;; Try to complete the current line to a line in the buffer
-          try-expand-line
-          ;; Try to complete the current line to an entire line in a different buffer.
-          try-expand-line-all-buffers
-          ;; Try to complete text using flyspell
-          ;try-flyspell
-          ;; Try to complete as an Emacs Lisp symbol, as many characters are unique.
-          try-complete-lisp-symbol-partially
+	'(;; Try to expand word "dynamically", searching just the current buffer
+	  try-expand-dabbrev
+	  ;; Try to expand word "dynamically", searching ...?
+	  try-expand-dabbrev-visible
+	  ;; Try to expand word "dynamically", searching all other buffers.
+	  try-expand-dabbrev-all-buffers
+	  ;; Try to expand word "dynamically", searching the kill ring
+	  try-expand-dabbrev-from-kill
+	  ;; Try to complete text as a filename, as many characters are unique
+	  try-complete-file-name-partially
+	  ;; Try to complete text as a filename.
+	  try-complete-file-name
+	  ;; Try to complete before point according to all abbrev tables.
+	  try-expand-all-abbrevs
+	  ;; Try to complete the current line to a list in the buffer
+	  try-expand-list
+	  ;; Try to complete the current line to a line in the buffer
+	  try-expand-line
+	  ;; Try to complete the current line to an entire line in a different buffer.
+	  try-expand-line-all-buffers
+	  ;; Try to complete text using flyspell
+					;try-flyspell
+	  ;; Try to complete as an Emacs Lisp symbol, as many characters are unique.
+	  try-complete-lisp-symbol-partially
 	  ;; Try to complete word as an Emacs Lisp symbol.
 	  try-complete-lisp-symbol)))
 
@@ -860,11 +1025,11 @@ This is useful when followed by an immediate kill."
   (global-corfu-mode)
 
   :custom
-  (corfu-auto nil)					; Popup appears automatically
-  (corfu-auto-delay 0.2)				;
+  (corfu-auto nil)     ; Popup appears automatically
+  (corfu-auto-delay 0.2)    ;
   (corfu-auto-prefix 3)
   (corfu-quit-no-match 'separator)
-  (corfu-preview-current t))				; Show candidate on pointer
+  (corfu-preview-current t))    ; Show candidate on pointer
 
 ;;; --- Cape
 
@@ -900,7 +1065,7 @@ This is useful when followed by an immediate kill."
   (setq switch-window-threshold 2)
   (setq switch-window-shortcut-style 'qwerty)
   (setq switch-window-qwerty-shortcuts
-        '("a" "s" "d" "f" "g" "h" "i" "j" "k"))
+	'("a" "s" "d" "f" "g" "h" "i" "j" "k"))
   :bind
   (;; TODO: validate these
    ("C-x 0" . switch-window-then-delete)
@@ -934,9 +1099,9 @@ This is useful when followed by an immediate kill."
 (defun sanityinc/desktop-time-restore (orig &rest args)
   (let ((start-time (current-time)))
     (prog1
-        (apply orig args)
+	(apply orig args)
       (message "Desktop restored in %.2fms"
-               (sanityinc/time-subtract-millis (current-time)
+	       (sanityinc/time-subtract-millis (current-time)
 					       start-time)))))
 (advice-add 'desktop-read :around 'sanityinc/desktop-time-restore)
 
@@ -948,7 +1113,7 @@ This is useful when followed by an immediate kill."
 	       (sanityinc/time-subtract-millis (current-time)
 					       start-time)
 	       (when filename
-                 (abbreviate-file-name filename))))))
+		 (abbreviate-file-name filename))))))
 (advice-add 'desktop-create-buffer :around 'sanityinc/desktop-time-buffer-create)
 
 ;; Restore histories and registers after saving
@@ -991,8 +1156,8 @@ This is useful when followed by an immediate kill."
 ;; Show whitespace issues
 (use-package whitespace
   :diminish (global-whitespace-mode
-              whitespace-mode
-              whitespace-newline-mode)
+	     whitespace-mode
+	     whitespace-newline-mode)
   :bind
   ("C-c T w" . whitespace-mode)
   :hook
@@ -1000,20 +1165,20 @@ This is useful when followed by an immediate kill."
 
   :config
   (setq whitespace-line-column 120
-        whitespace-style '(face
-                           tabs
-                           indent
-                           tab-mark
-                           empty
-                           trailing
-                           lines-tail)))
+	whitespace-style '(face
+			   tabs
+			   indent
+			   tab-mark
+			   empty
+			   trailing
+			   lines-tail)))
 
 (use-package whitespace-cleanup-mode
   :ensure t
   :diminish whitespace-cleanup-mode
 
   :bind (("C-c T W" . whitespace-cleanup-mode)
-         ("C-c e w" . whitespace-cleanup))
+	 ("C-c e w" . whitespace-cleanup))
 
   :hook
   (prog-mode . whitespace-cleanup-mode)
@@ -1032,18 +1197,18 @@ This is useful when followed by an immediate kill."
   :ensure t
   :after (dired)
   :hook ((prog-mode  . diff-hl-mode)
-         (dired-mode . diff-hl-dired-mode)
-         (after-init . global-diff-hl-mode))
+	 (dired-mode . diff-hl-dired-mode)
+	 (after-init . global-diff-hl-mode))
   :init
   (defconst hplogsdon/diff-hl-mode-hooks '(emacs-lisp-mode-hook
-                                           conf-space-mode-hook ; .tmux.conf
-                                           markdown-mode-hook
-                                           css-mode-hook
-                                           web-mode-hook
-                                           sh-mode-hook
-                                           python-mode-hook
-                                           yaml-mode-hook ; tmuxp yaml configs
-                                           c-mode-hook)
+					   conf-space-mode-hook ; .tmux.conf
+					   markdown-mode-hook
+					   css-mode-hook
+					   web-mode-hook
+					   sh-mode-hook
+					   python-mode-hook
+					   yaml-mode-hook ; tmuxp yaml configs
+					   c-mode-hook)
     "List of hook of major modes in which `diff-hl-mode' should be enabled.")
   (dolist (hook hplogsdon/diff-hl-mode-hooks)
     (add-hook hook #'diff-hl-flydiff-mode))
@@ -1093,44 +1258,90 @@ This is useful when followed by an immediate kill."
 	  (diff-buffer-with-file (current-buffer))
 	(call-interactively #'vc-diff)))))
 
-;;; init-git.el --- Git SCM Support -*- lexical-binding: t -*-
-;;; Commentary:
-;;; Code:
+;;; --- Git SCM Support
+
+(use-package git-gutter
+  :ensure t
+  :defer t
+  :hook (prog-mode . git-gutter-mode)
+  :config
+  (setq git-gutter:update-interval 1))
+
+
+(use-package git-gutter-fringe
+  :ensure t
+  :config
+  (define-fringe-bitmap 'git-gutter-fr:added [244] nil nil '(center repeated))
+  (define-fringe-bitmap 'git-gutter-fr:modified [244] nil nil '(center repeated))
+  (define-fringe-bitmap 'git-gutter-fr:deleted [128 192 244 240] nil nil 'bottom))
+
 
 (use-package git-modes
   :mode
-  ("\\'\\.(docker\\|fd\\|rg\\|ag\\|ag\\|git\\)?ignore\\'" . gitignore-mode))
+  ("\\.?gitignore\\'"
+   "\\.?gitignore_global\\'"
+   "\\.?dockerignore\\'")
+  :defer t)
 
 
 (use-package git-timemachine
   :bind
   (("C-x v t" . git-timemachine-toggle))
-  
   :hook
   (git-timemachine-mode . display-line-numbers-mode))
 
 
 (use-package magit
-  :bind (("C-c g" . magit-status)
-	 ("C-x g" . magit-status)
-	 ("C-x M-g" . magit-dispatch)
-	 ("C-M-<up>" . magit-section-up)
-	 ("C-M-<down>" . magit-section-down)
+  :ensure t
+  :bind (("C-x g" . magit-status)
 	 :map magit-status-mode-map
-	 ("TAB" . magit-selection-toggle)
-	 ("<C-tab>" . magit-section-cycle)
-	 :map magit-branch-section-map
-	 ("RET" . magit-checkout))
-
-  :hook
-  ((after-save . 'magit-after-save-refresh-status))
+	 ("C-x C-k" . hpl/magit-kill-file-on-line)
+	 ("q" . hpl/magit-quit-session)
+	 ("W" . hpl/magit-toggle-whitespace))
 
   :config
-  (setq ;;magit-use-overlays nil
-        ;;magit-section-visibility-indicator nil
-        ;;magit-completing-read-function 'ivy-completing-read
-        ;;magit-push-always-verify nil
-        magit-repository-directories '("~/Projects/")))
+  (progn
+    (setq magit-auto-revert-mode nil)
+    (setq magit-repository-directories '("~/Projects/"))
+
+    ;(defadvice magit-status (around magit-fullscreen activate)
+    ;  (unless (get-register :magit-fullscreen)
+    ;    (window-configuration-to-register :magit-fullscreen))
+    ;  ad-to-it
+    ;  (delete-other-windows))
+
+    (defun hpl/magit-kill-file-on-line ()
+      ""
+      (interactive)
+      (magit-visit-item)
+      (delete-current-buffer-file)
+      (magit-refresh))
+
+    (defun hpl/magit-quit-session ()
+      "Restores the previous window configuration"
+      (interactive)
+      (kill-buffer)
+      (jump-to-register :magit-fullscreen)
+      (set-register :magit-fullscreen nil))
+
+    (defun hpl/magit-toggle-whitespace ()
+      ""
+      (interactive)
+      (if (member "-w" magit-diff-options)
+	  (hpl/magit-dont-ignore-whitespace)
+	(hpl/magit-ignore-whitespace)))
+
+    (defun hpl/magit-dont-ignore-whitespace ()
+      ""
+      (interactive)
+      (add-to-list 'magit-diff-options "-w")
+      (magit-refresh))
+
+    (defun hpl/magit-ignore-whitespace ()
+      ""
+      (interactive)
+      (setq magit-diff-options (remove "-w" magit-diff-options))
+      (magit-refresh))))
 
 ;;; --- Github integration
 
@@ -1149,6 +1360,60 @@ This is useful when followed by an immediate kill."
 
 ;;; --- Gitlab Integration
 
+;;; --- ibuffer defaults
+(use-package ibuffer
+  :ensure nil
+  :bind (("C-x C-b" . ibuffer))
+  :custom
+  (ibuffer-show-empty-filter-groups nil)
+  (ibuffer-saved-filter-groups
+   '(("default"
+      ("org" (or (mode . org-mode) (name . "^\\*Org Src")))
+      ("emacs" (or (name . "^\\*scratch\\*$") (name . "^\\*Messages\\*$")))
+      ("dired" (mode . dired-mode))
+      ("help" (or (name . "^\\*Help\\*$") (name . "^\\*helpful"))))))
+  :hook
+  ((ibuffer-mode . (lambda ()
+		     (ibuffer-switch-to-saved-filter-groups "default")))))
+
+;;; --- Projectile Project configuration
+(use-package projectile
+  :ensure projectile
+  :diminish projectile-mode
+
+  :bind
+  (("C-c p" . projectile-switch-project))
+
+  :init
+  (setq-default
+   projectile-cache-file (expand-file-name ".projectile-cache" user-emacs-directory)
+   projectile-keymap-prefix (kbd "C-c C-p")
+   projectile-known-projects-file (expand-file-name ".projectile-bookmarks" user-emacs-directory))
+
+  :config
+  (projectile-global-mode 1)
+  (setq projectile-enable-caching t
+	projectile-create-missing-test-files t
+	;;projectile-completion-system 'ivy
+	projectile-mode-line-prefix " Proj"
+	projectile-mode-line '(:eval (projectile-project-name))
+	projectile-use-git-grep t
+	projectile-commander-methods nil))
+
+
+(use-package ibuffer-projectile
+  :after (projectile)
+  :bind
+  (:map ibuffer-mode-map
+	("c" . clean-buffer-list)
+	("n" . ibuffer-forward-filter-group)
+	("p" . ibuffer-backwards-filter-group))
+  :hook
+  ((ibuffer . (lambda ()
+		(ibuffer-projectile-set-filter-groups)
+		(unless (eq ibuffer-sorting-mode 'alphabetic)
+		  (ibuffer-do-sort-by-alphabetic)))))
+
 ;; [[file:../Emacs.org::*orgmode][orgmode:1]]
 ;;; --- Org Mode Configuration
 
@@ -1157,13 +1422,13 @@ This is useful when followed by an immediate kill."
   :mode ("\\.org\\'" . org-mode)
   :defer t
   :bind (("C-c a" . org-agenda)
-		 ("C-c c" . org-capture)
-		 ;("C-c j" . org-journal)
-		 (:map org-mode-map
-			   (("M-p" . outline-previous-visible-heading)
-				("M-n" . outline-next-visible-heading)
-				("C-c C-p" . eaf-org-export-to-pdf-and-open)
-				("C-c ;" . nil))))
+	 ("C-c c" . org-capture)
+	 ;;("C-c j" . org-journal)
+	 (:map org-mode-map
+	       (("M-p" . outline-previous-visible-heading)
+		("M-n" . outline-next-visible-heading)
+		("C-c C-p" . eaf-org-export-to-pdf-and-open)
+		("C-c ;" . nil))))
 
   :custom
   (org-return-follows-link t)
@@ -1173,13 +1438,13 @@ This is useful when followed by an immediate kill."
   (org-agenda-window-setup 'other-window)
   (org-babel-load-languages
    '((emacs-lisp . t)
-	 (python . t)
-	 (dot . t)))
+     (python . t)
+     (dot . t)))
   (org-log-done 'time)
   (org-log-into-drawer t)
   (org-todo-keywords
    '((sequence "TODO(t)" "NEXT(n)" "|" "DONE(d)")
-	 (sequence "WAITING(w@/!)" "HOLD(h@/!)" "|" "CANCELLED(c@/!)")))
+     (sequence "WAITING(w@/!)" "HOLD(h@/!)" "|" "CANCELLED(c@/!)")))
 
   :custom-face
   (org-agenda-current-time ((t (:foreground "spring green"))))
@@ -1193,13 +1458,13 @@ This is useful when followed by an immediate kill."
 
   :config
   (unless (version< org-version "9.2")
-	(require 'org-tempo))
+    (require 'org-tempo))
   (when (or (file-directory-p "~/org/agenda") (file-directory-p "~/org/journal"))
     (setq org-agenda-files (list "~/org/agenda" "~/org/journal"))))
 
 (use-package org-journal
   :bind (("C-c j n" . org-journal-new-entry)
-	   ("C-c j t" . org-journal-today))
+	 ("C-c j t" . org-journal-today))
 
   :custom
   (org-journal-date-prefix "#+TITLE: ")
@@ -1209,8 +1474,8 @@ This is useful when followed by an immediate kill."
 
   :config
   (defun org-journal-today ()
-	(interactive)
-	(org-journal-new-entry t)))
+    (interactive)
+    (org-journal-new-entry t)))
 ;; orgmode:1 ends here
 
 (show-paren-mode 1)
@@ -1245,10 +1510,10 @@ This is useful when followed by an immediate kill."
   :ensure t
   :diminish (paredit-mode))
 ;;  :hook ((lisp-mode             . paredit-mode)
-;;	 (cider-mode            . paredit-mode)
-;;	 (cider-repl-mode       . paredit-mode)
+;;  (cider-mode            . paredit-mode)
+;;  (cider-repl-mode       . paredit-mode)
 ;;     (clojure-mode          . paredit-mode)
-;;	 (emacs-lisp-mode       . paredit-mode))
+;;  (emacs-lisp-mode       . paredit-mode))
 
 ;;; --- Emacs lisp settings, and common config for other lisps
 
@@ -1256,56 +1521,56 @@ This is useful when followed by an immediate kill."
   "Eval region from BEG to END if active, otherwise the last sexp."
   (interactive "P")
   (if (and (mark) (use-region-p))
-	  (eval-region (min (point) (mark)) (max (point) (mark)))
-	(pp-eval-last-sexp prefix)))
+      (eval-region (min (point) (mark)) (max (point) (mark)))
+    (pp-eval-last-sexp prefix)))
 
 ;; TODO: look into `litable' as an alternative
 (defun hplogsdon/elisp-eval-and-comment-output ()
   "Add the output of the sexp as a comment after the sexp"
   (interactive)
   (save-excursion
-	(end-of-line)
-	(condition-case nil
-		(printc (concat " ; -> " (pp-to-string (eval (preceding-sexp))))
-				(current-buffer))
-	  (error (message "Invalid expression")))))
+    (end-of-line)
+    (condition-case nil
+	(printc (concat " ; -> " (pp-to-string (eval (preceding-sexp))))
+		(current-buffer))
+      (error (message "Invalid expression")))))
 
 (defun hplogsdon/elisp-eval-region ()
   (interactive)
   (if (region-active-p)
-	  (progn
-		(eval-region (region-beginning)
-					 (region-end))
-		(deactivate-mark))
-	(eval-expression)))
+      (progn
+	(eval-region (region-beginning)
+		     (region-end))
+	(deactivate-mark))
+    (eval-expression)))
 
 (defun hplogsdon/elisp-headerize ()
   "Adds a header and footer to an elisp buffer for Flycheck"
   (interactive)
   (let ((fname (if (buffer-file-name)
-				   (file-name-nondirectory (buffer-file-name))
-				 (error "This buffer is not visiting a file"))))
-	(save-excursion
-	  (goto-char (point-min))
-	  (insert ";;; " fname " --- Description -*- lexical-binding: t -*-\n"
-			  ";;; Commentary:\n"
-			  ";;; Code:\n\n")
-	  (goto-char (point-max))
-	  (insert ";;; " fname " ends here\n"))))
+		   (file-name-nondirectory (buffer-file-name))
+		 (error "This buffer is not visiting a file"))))
+    (save-excursion
+      (goto-char (point-min))
+      (insert ";;; " fname " --- Description -*- lexical-binding: t -*-\n"
+	      ";;; Commentary:\n"
+	      ";;; Code:\n\n")
+      (goto-char (point-max))
+      (insert ";;; " fname " ends here\n"))))
 
 (defun hplogsdon/elisp-register-elc-delete-on-save ()
   "If you're saving an elisp file, the .elc is likely invalid."
   (make-local-variable 'after-save-hook)
   (add-hook 'after-save-hook
-			'(lambda ()
-			   (when (file-exists-p (concat buffer-file-name "c"))
-				 (delete-file (concat buffer-file-name "c"))))))
+	    '(lambda ()
+	       (when (file-exists-p (concat buffer-file-name "c"))
+		 (delete-file (concat buffer-file-name "c"))))))
 
 (use-package emacs-lisp-mode
   :defer t
   :hook ((emacs-lisp-mode . outline-minor-mode)
-	       (emacs-lisp-mode . reveal-mode)
-         (emacs-lisp-mode . eldoc-mode))
+	 (emacs-lisp-mode . reveal-mode)
+	 (emacs-lisp-mode . eldoc-mode))
   :bind (("C-x e" . hplogsdon/elisp-eval-and-comment-output))
   :mode (("\\.el$" . emacs-lisp-mode))
   :init
@@ -1320,6 +1585,74 @@ This is useful when followed by an immediate kill."
 (use-package color-identifiers-mode
   :ensure t
   :hook ((emacs-lisp-mode . color-identifiers-mode)))
+
+;;; --- Clojure lanaguage
+(use-package clojure-mode
+  :mode (("\\.boot$" . clojure-mode)
+	 ("\\.clj$"  . clojure-mode)
+	 ("\\.cljc$" . clojure-mode)
+	 ("\\.cljs$" . clojurescript-mode)
+	 ("\\.edn$"  . clojure-mode))
+  :config
+  (use-package align-cljlet
+    :bind (:map clojure-mode-map
+		("C-! a a" . align-cljlet)
+		:map clojurescript-mode-map
+		("C-! a a" . align-cljlet)
+		:map clojurec-mode-map
+		("C-! a a" . align-cljlet))))
+
+(use-package clj-refactor
+  :disabled
+  :init
+  (defun hpl/clj-refactor-mode-hook ()
+    ;;(yas-minor-mode 1)
+    (clj-refactor-mode 1))
+  (add-hook 'clojure-mode-hook #'hpl/clj-refactor-mode-hook)
+  (setq cljr-clojure-test-declaration "[clojure.test :refer :all]"
+	cljr-cljs-clojure-test-declaration "[cljs.test :refer-macros [deftest is use-fixtures]]")
+  :config
+  (cljr-add-keybindings-with-prefix "<menu>")
+  (add-to-list 'cljr-magic-require-namespaces
+	       '("s" . "clojure.spec.alpha")))
+
+(use-package cider
+  :bind (:map cider-repl-mode-map
+	      ("M-r" . cider-refresh)
+	      ("C-c r" . cider-repl-reset)
+	      ("M-R" . hpl/cider-user-repl-tools))
+  :config
+  (setq nrepl-hide-special-buffers t
+	nrepl-popup-stacktraces-in-repl t
+	nrepl-history-file "~/.emacs.d/nrepl-history"
+	cider-repl-history-file ".cider-repl-history"
+	cider-mode-line " CIDER"
+	cider-repl-display-in-current-window t
+	cider-auto-select-error-buffer nil
+	cider-repl-pop-to-buffer-on-connect nil
+	cider-show-error-buffer nil
+	cider-repl-use-pretty-printing t
+	cider-cljs-lein-repl "(do (use 'figwheel-sidecar.repl-api) (start-figwheel!) (cljs-repl))")
+
+  (defun hpl/cider-use-repl-tools ()
+    (interactive)
+    (cider-interactive-repl
+     "(use 'clojure.repl)"))
+
+  (fset 'cider-eval-last-sexp-and-comment
+	"\C-u\C-x\C-e\C-a\260 ;; \C-e")
+
+  (bind-key "C-j" 'cider-eval-last-sexp-and-comment clojure-mode-map)
+
+  ;; this snippet comes from schmir https://github.com/schmir/.emacs.d/blob/master/lisp/setup-clojure.el
+  (advice-add 'cider-load-buffer :after
+	      (lambda (&rest _)
+		"Switch to namespace"
+		(cider-repl-set-ns (cider-current-ns))
+		(cider-switch-to-repl-buffer)))
+
+  ;; Fix cond indenting
+  (put 'cond 'clojure-backtracking-indent '(2 4 2 4 2 4 2 4 2 4 2 4 2 4 2 4 2 4 2 4 2 4 2 4 2 4 2 4 2 4 2 4 2 4 2 4 2 4 2 4 2 4 2 4 2 4 2 4 2 4)))
 
 ;; [[file:../Emacs.org::*which-key][which-key:1]]
 ;;; --- Which Key
@@ -1341,25 +1674,25 @@ This is useful when followed by an immediate kill."
 ;; which-key:1 ends here
 
 ;; [[file:../Emacs.org::*Footer][Footer:1]]
-;; Allow access from emacsclient 
+;; Allow access from emacsclient
 (add-hook 'after-init-hook
-          (lambda ()
-            (require 'server)
-            (unless (server-running-p)
-              (server-start))))
+	  (lambda ()
+	    (require 'server)
+	    (unless (server-running-p)
+	      (server-start))))
 
 (when (file-exists-p custom-file)
-	(load custom-file))
+  (load custom-file))
 
 
-;;; Configure default locales
+ ;;; Configure default locales
 (defun sanityinc/locale-var-encoding (v)
   "Returning the encoding portion of the locale string V, or nil if missing."
   (when v
     (save-match-data)
-      (let ((case-fold-search t))
-        (when (string-match "\\.\\([^.]*\\)\\'" v)
-          (intern (downcase (match-string 1 v)))))))
+    (let ((case-fold-search t))
+      (when (string-match "\\.\\([^.]*\\)\\'" v)
+        (intern (downcase (match-string 1 v)))))))
 
 (dolist (varname '("LC_ALL" "LANG" "LC_CTYPE"))
   (let ((encoding (sanityinc/locale-var-encoding (getenv varname))))
@@ -1377,10 +1710,11 @@ This is useful when followed by an immediate kill."
   (set-selection-coding-system 'utf-8))
 
 
+;;; init.el ends here
+;; Footer:1 ends here
+
 (provide 'init)
 ;; Local Variables:
 ;; coding: utf-8-unix
 ;; no-byte-compile: t
 ;; End:
-;;; init.el ends here
-;; Footer:1 ends here

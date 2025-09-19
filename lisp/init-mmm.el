@@ -21,10 +21,10 @@
   ;; Submode classes
   ;;(mmm-add-classes
   ;; '((embedded-css
-  ;;	  :submode css
-  ;;	  :face mmm-declaration-submode-face
+  ;;   :submode css
+  ;;   :face mmm-declaration-submode-face
   ;;    :front "<style[^>]&>"
-  ;;	  :back "</style>")))
+  ;;   :back "</style>")))
 
   ;; Submode groups
   ;;(mmm-add-to-group 'html-js '((js-html
@@ -33,4 +33,4 @@
   ;;                              :front "%=%"
   ;;                              :back "%=%"
   ;;                              :end-not-begin t)))
-)
+  )

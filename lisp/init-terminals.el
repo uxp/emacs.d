@@ -2,7 +2,7 @@
 ;;; Commentary:
 ;;; Code:
 
-;; 
+;;
 ;;(use-package vterm
 ;;  :ensure t)
 
