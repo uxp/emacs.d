@@ -9,7 +9,7 @@
 ;;;
 ;;; Code:
 
-;; [[file:../Emacs.org::*Header and Guard Statements][Header and Guard Statements:2]]
+;; [[file:Emacs.org::*Header and Guard Statements][Header and Guard Statements:2]]
 ;; Produce backtraces on error: helpful for startup issues
 (setq debug-on-error t
       debug-on-quit nil
@@ -23,10 +23,11 @@
 (add-to-list 'load-path (expand-file-name "lisp" user-emacs-directory))
 ;; Header and Guard Statements:2 ends here
 
-;; [[file:../Emacs.org::*Benchmarking][Benchmarking:1]]
+;; [[file:Emacs.org::*Benchmarking][Benchmarking:1]]
 ;;; --- Measure startup time and require times
 
 (defun sanityinc/time-subtract-millis (b a)
+  "Subtract time A from time B in milliseconds."
   (* 1000.0 (float-time (time-subtract b a))))
 
 
@@ -65,16 +66,19 @@ LOAD-DURATION is the time taken in milliseconds to load FEATURE.")
 
 
 (defun sanityinc/require-times-sort-by-start-time-pred (entry1 entry2)
+  "Sorting function predicate for `sanityinc/require-times-mode' comparing ENTRY1 and ENTRY2 by start time."
   (< (string-to-number (elt (nth 1 entry1) 0))
      (string-to-number (elt (nth 1 entry2) 0))))
 
 
 (defun sanityinc/require-times-sort-by-load-time-pred (entry1 entry2)
+  "Sorting function predicate for `sanityinc/require-times-mode' comparing ENTRY1 and ENTRY2 by load time."
   (> (string-to-number (elt (nth 1 entry1) 0))
      (string-to-number (elt (nth 1 entry2) 0))))
 
 
 (defun sanityinc/require-times-tabulated-list-entries ()
+  "Show require times of all modules in a table format."
   (cl-loop for (feature start-time millis) in sanityinc/require-times
 	   with order = 0
 	   do (cl-incf order)
@@ -94,13 +98,14 @@ LOAD-DURATION is the time taken in milliseconds to load FEATURE.")
     (display-buffer (current-buffer))))
 
 (defun sanityinc/show-init-time ()
+  "Common function that prints the initialization time of Emacs."
   (message "init completed in %.2fms"
 	   (sanityinc/time-subtract-millis after-init-time before-init-time)))
 
 (add-hook 'after-init-hook 'sanityinc/show-init-time)
 ;; Benchmarking:1 ends here
 
-;; [[file:../Emacs.org::*Defines][Defines:1]]
+;; [[file:Emacs.org::*Defines][Defines:1]]
 ;;; --- Helpful defines and functions
 (setq *spell-check-support-enabled* nil) ;; Enable with 't if you prefer
 
@@ -116,13 +121,13 @@ LOAD-DURATION is the time taken in milliseconds to load FEATURE.")
 (setq process-adaptive-read-buffering nil)
 ;; Defines:1 ends here
 
-;; [[file:../Emacs.org::*Bootstrapping][Bootstrapping:1]]
+;; [[file:Emacs.org::*Bootstrapping][Bootstrapping:1]]
 ;;; --- Bootstrap stuff.
 ;; Set user custom file
 (setq custom-file (locate-user-emacs-file "custom.el"))
 ;; Bootstrapping:1 ends here
 
-;; [[file:../Emacs.org::*Package Management][Package Management:1]]
+;; [[file:Emacs.org::*Package Management][Package Management:1]]
 ;; Set straight.el default config before bootstrapping
 (setq straight-use-package-by-default t                 ; use-package defaults to straight.el
       straight-recipes-gnu-elpa-use-mirror t            ; use straight's mirror of elpa
@@ -177,22 +182,23 @@ LOAD-DURATION is the time taken in milliseconds to load FEATURE.")
 (require 'cl-lib)
 ;; Package Management:1 ends here
 
-;; [[file:../Emacs.org::*Package helpers][Package helpers:1]]
+;; [[file:Emacs.org::*Package helpers][Package helpers:1]]
 ;;; --- Package Helpers
 
 (use-package diminish
   :ensure t)
 ;; Package helpers:1 ends here
 
-;; [[file:../Emacs.org::*Init file helpers][Init file helpers:1]]
+;; [[file:Emacs.org::*Init file helpers][Init file helpers:1]]
 ;;; --- Emacs-Lisp helper functions and commands
 
 (defun hpl/reload-user-init-file ()
-  "Reload the init file"
+  "Reload the init file."
   (interactive)
   (load-file user-init-file))
 
 (defun hpl/find-init-file ()
+  "Opens emacs.d/init.el in the buffer."
   (interactive)
   (let ((this-init-file "~/.emacs.d/init.el"))
     (find-file this-init-file)))
@@ -200,7 +206,7 @@ LOAD-DURATION is the time taken in milliseconds to load FEATURE.")
 (bind-key "C-c C-<f5>" 'hpl/reload-user-init-file)
 ;; Init file helpers:1 ends here
 
-;; [[file:../Emacs.org::*Delete files][Delete files:1]]
+;; [[file:Emacs.org::*Delete files][Delete files:1]]
 ;; Delete the current file
 (defun delete-this-file ()
   "Delete the current file, and kill the buffer."
@@ -229,7 +235,7 @@ LOAD-DURATION is the time taken in milliseconds to load FEATURE.")
         (rename-buffer new-name)))))
 ;; Delete files:1 ends here
 
-;; [[file:../Emacs.org::*DWIM Capitalization][DWIM Capitalization:1]]
+;; [[file:Emacs.org::*DWIM Capitalization][DWIM Capitalization:1]]
 ;; Capitalize current word or all words in region
 (defun hpl/capitalization-dwim ()
   "Capitalize all words in region or point."
@@ -256,7 +262,7 @@ LOAD-DURATION is the time taken in milliseconds to load FEATURE.")
 ;; bind keys from table
 ;; DWIM Capitalization:1 ends here
 
-;; [[file:../Emacs.org::*Duplication][Duplication:1]]
+;; [[file:Emacs.org::*Duplication][Duplication:1]]
 (defun hpl/duplicate-current-line-or-region (arg)
   "Duplicate the current line or region ARG times.
 If there is no region, the current line will be duplicated."
@@ -291,7 +297,7 @@ region-end are used. Adds the duplicated text to the kill ring."
 ;; bind keys from table
 ;; Duplication:1 ends here
 
-;; [[file:../Emacs.org::*New lines][New lines:1]]
+;; [[file:Emacs.org::*New lines][New lines:1]]
 (defun hpl/open-line-below ()
   "Opens a line below the point."
   (interactive)
@@ -310,9 +316,9 @@ region-end are used. Adds the duplicated text to the kill ring."
 ;; bind keys from table
 ;; New lines:1 ends here
 
-;; [[file:../Emacs.org::*Quoting regions][Quoting regions:1]]
+;; [[file:Emacs.org::*Quoting regions][Quoting regions:1]]
 (defun hpl/current-quotes-char ()
-  "Gets the current quotes character"
+  "Gets the current quotes character."
   (nth 3 (syntax-ppss)))
 
 (defalias 'point-is-in-string-p 'hpl/current-quotes-char)
@@ -322,6 +328,10 @@ region-end are used. Adds the duplicated text to the kill ring."
 
 (defun hpl/move-point-backward-out-of-string ()
   (while (point-is-in-string-p) (backward-char)))
+
+(defun hpl/alternate-quotes-char ()
+  "Gets the alternate quotes character."
+  (if (eq ?' (hpl/current-quotes-char)) ?\" ?'))
 
 (defun hpl/toggle-quotes ()
   (interactive)
@@ -346,7 +356,7 @@ region-end are used. Adds the duplicated text to the kill ring."
 ;; bind-keys-from-table
 ;; Quoting regions:1 ends here
 
-;; [[file:../Emacs.org::*Whitespace][Whitespace:1]]
+;; [[file:Emacs.org::*Whitespace][Whitespace:1]]
 (defun hpl/indent-buffer ()
   "Indent the current buffer."
   (interactive)
@@ -357,14 +367,14 @@ region-end are used. Adds the duplicated text to the kill ring."
   (interactive)
   (save-excursion
     (beginning-of-buffer)
-    (while (re-search-forward "	" nil t)
-      (replace-match " "))
+    (while (re-search-forward "\t" nil t)
+      (replace-match "        "))
     (hpl/indent-buffer)))
 
 (bind-key "C-c w" 'hpl/cleanup-whitespace)
 ;; Whitespace:1 ends here
 
-;; [[file:../Emacs.org::*Lisp directory (aka, `vendor')][Lisp directory (aka, `vendor'):1]]
+;; [[file:Emacs.org::*Lisp directory (aka, `vendor')][Lisp directory (aka, `vendor'):1]]
 ;;; --- Support elisp manually installed in the site-lisp dir
 
 ;; This must come before `elpa', as it may provide package.el
@@ -416,7 +426,7 @@ under ~/.emacs.d/site-lisp/NAME"
     (and f (string-prefix-p (file-name-as-directory (site-lisp-dir-for name)) f))))
 ;; Lisp directory (aka, `vendor'):1 ends here
 
-;; [[file:../Emacs.org::*Exec Path][Exec Path:1]]
+;; [[file:Emacs.org::*Exec Path][Exec Path:1]]
 ;;; --- Setup exec-path to help Emacs find packages
 
 (when (or (memq window-system '(mac ns x pgtk))
@@ -431,7 +441,7 @@ under ~/.emacs.d/site-lisp/NAME"
       (add-to-list 'exec-path-from-shell-variables var))))
 ;; Exec Path:1 ends here
 
-;; [[file:../Emacs.org::*Performance tuning][Performance tuning:1]]
+;; [[file:Emacs.org::*Performance tuning][Performance tuning:1]]
 ;;; --- Performance tuning
 
 ;; General performance tuning with the Garbage Collector Magic Hack
@@ -449,6 +459,7 @@ under ~/.emacs.d/site-lisp/NAME"
 (setq jit-lock-defer-time 0)
 ;; Performance tuning:1 ends here
 
+;; [[file:Emacs.org::*Frame Hooks][Frame Hooks:1]]
 ;;; --- Provide specific hooks for GUI/TTY frame creation
 (defvar after-make-console-frame-hooks '()
   "Hooks to run after creating a new TTY frame")
@@ -473,7 +484,9 @@ Selectively runs either `after-make-console-frame-hooks' or
 (add-hook 'after-init-hook
 	  (lambda () (when sanityinc/initial-frame
 		       (run-after-make-frame-hooks sanityinc/initial-frame))))
+;; Frame Hooks:1 ends here
 
+;; [[file:Emacs.org::*XTerm][XTerm:1]]
 ;;; --- Integrate with terminals such as xterm
 
 (global-set-key [mouse-4] (lambda () (interactive) (scroll-down 1)))
@@ -487,7 +500,9 @@ Selectively runs either `after-make-console-frame-hooks' or
 
 
 (add-hook 'after-make-console-frame-hooks 'sanityinc/console-frame-setup)
+;; XTerm:1 ends here
 
+;; [[file:Emacs.org::*Fonts][Fonts:1]]
 ;;; --- Fonts
 (if *is-macos*
     (progn
@@ -507,7 +522,9 @@ Selectively runs either `after-make-console-frame-hooks' or
 ;;      :font "JetBrains Mono Nerd Font"
 ;;      :weight 'bold
 ;;      :height 110)
+;; Fonts:1 ends here
 
+;; [[file:Emacs.org::*Ligatures][Ligatures:1]]
 (use-package fira-code-mode
   :straight t
   :demand t
@@ -515,7 +532,9 @@ Selectively runs either `after-make-console-frame-hooks' or
   :hook prog-mode
   :custom (fira-code-mode-disabled-ligatures '("[]" ":" "x"))
   :config (fira-code-mode-set-font))
+;; Ligatures:1 ends here
 
+;; [[file:Emacs.org::*Emoji][Emoji:1]]
 ;; Default Windows emoji font
 (when (member "Segoe UI Emoji" (font-family-list))
   (set-fontset-font t 'symbol (font-spec :family "Segoe UI Emoji") nil 'prepend)
@@ -528,7 +547,9 @@ Selectively runs either `after-make-console-frame-hooks' or
 (when (member "Apple Color Emoji" (font-family-list))
   (set-fontset-font t 'symbol (font-spec :family "Apple Color Emoji") nil 'prepend)
   (set-fontset-font "fontset-default" '(#xFF00 . #xFE0F) "Apple Color Emoji"))
+;; Emoji:1 ends here
 
+;; [[file:Emacs.org::*Icons][Icons:1]]
 ;;; --- Icons
 
 (use-package nerd-icons)
@@ -566,7 +587,9 @@ Selectively runs either `after-make-console-frame-hooks' or
 
   :init
   (add-to-list 'corfu-margin-formatters #'nerd-icons-corfu-formatter))
+;; Icons:1 ends here
 
+;; [[file:Emacs.org::*UI Elements][UI Elements:1]]
 ;;; --- Line Numbers
 
 (setq column-number-mode t)
@@ -586,14 +609,18 @@ Selectively runs either `after-make-console-frame-hooks' or
 		dired-mode-hook
 		eshell-mode-hook))
   (add-hook mode (lambda () (display-line-numbers-mode nil))))
+;; UI Elements:1 ends here
 
+;; [[file:Emacs.org::*Themes][Themes:1]]
 ;;; --- Theming
 
 (use-package monokai-pro-theme
   :ensure t
   :init
   (load-theme 'monokai-pro t))
+;; Themes:1 ends here
 
+;; [[file:Emacs.org::*GUI Frames][GUI Frames:1]]
 ;;; --- Non-TTY frames behavior
 
 ;; Stop C-z frame
@@ -633,7 +660,9 @@ Selectively runs either `after-make-console-frame-hooks' or
 
 (add-hook 'after-make-frame-functions 'hpl/set-frame-transparency)
 (add-hook 'after-init-hook 'hpl/set-frame-transparency)
+;; GUI Frames:1 ends here
 
+;; [[file:Emacs.org::*macOS Keys][macOS Keys:1]]
 ;;; Configuration specific to MacOS
 
 (when *is-macos*
@@ -661,7 +690,9 @@ Selectively runs either `after-make-console-frame-hooks' or
     (define-key nxml-mode-map (kbd "M-h") nil))
   ;; what describe-key reports for cmd-option-h
   (global-set-key (kbd "M-_") 'ns-do-hide-others))
+;; macOS Keys:1 ends here
 
+;; [[file:Emacs.org::*General keys][General keys:1]]
 ;;; General keybinds-
 
 (defun hplogsdon/kill-this-buffer ()
@@ -702,16 +733,22 @@ Selectively runs either `after-make-console-frame-hooks' or
 
 ;; Go to line
 (global-set-key (kbd "M-g") 'goto-line)
+;; General keys:1 ends here
 
+;; [[file:Emacs.org::*Unset conveniences.][Unset conveniences.:1]]
 (setq shift-select-mode nil)
+;; Unset conveniences.:1 ends here
 
+;; [[file:Emacs.org::*Unset conveniences.][Unset conveniences.:2]]
 ;;  (global-unset-key [up])
 ;;  (global-unset-key [down])
 ;;  (global-unset-key [left])
 ;;  (global-unset-key [right])
 ;;  (global-unset-key [M-left])
 ;;  (global-unset-key [M-right])
+;; Unset conveniences.:2 ends here
 
+;; [[file:Emacs.org::*dired][dired:1]]
 ;;; --- Dired customization
 
 (use-package dired
@@ -735,7 +772,9 @@ Selectively runs either `after-make-console-frame-hooks' or
 		dired-use-ls-dired t
 		dired-listing-switches "-aBhl --group-directories-first")
 	(setq dired-use-ls-dired nil)))))
+;; dired:1 ends here
 
+;; [[file:Emacs.org::*isearch][isearch:1]]
 ;;; --- isearch settings
 
 (defun sanityinc/isearch-occur ()
@@ -794,7 +833,9 @@ This is useful when followed by an immediate kill."
   (goto-char isearch-other-end))
 
 (define-key isearch-mode-map [(control return)] 'sanityinc/isearch-exit-other-end)
+;; isearch:1 ends here
 
+;; [[file:Emacs.org::*grep][grep:1]]
 ;;; --- Settings for grep and grep-like tools
 
 (setq-default grep-highlight-matched t
@@ -819,7 +860,9 @@ This is useful when followed by an immediate kill."
   (use-package rg
     :bind
     (("M-?" . rg-project))))
+;; grep:1 ends here
 
+;; [[file:Emacs.org::*uniquify][uniquify:1]]
 ;;; --- Configure uniquification of buffer name
 
 (use-package uniquify
@@ -828,7 +871,9 @@ This is useful when followed by an immediate kill."
 	uniquify-separator " • "
 	uniquify-after-kill-buffer-p t
 	uniquify-ignore-buffers-re "^\\*"))
+;; uniquify:1 ends here
 
+;; [[file:Emacs.org::*flymake][flymake:1]]
 ;;; --- Configure flymake global behavior
 
 (use-package flymake
@@ -839,7 +884,9 @@ This is useful when followed by an immediate kill."
 	      ("C-c n" . flymake-goto-next-error)
 	      ("C-c p" . flymake-goto-prev-error)
 	      ("C-c c" . flymake-start)))
+;; flymake:1 ends here
 
+;; [[file:Emacs.org::*xref][xref:1]]
 ;;; --- Cross Reference (xref) configuration
 
 (use-package xref
@@ -852,7 +899,9 @@ This is useful when followed by an immediate kill."
   :config (add-to-list 'xref-prompt-for-identifier #'xref-find-references 'append)
   :custom
   (xref-auto-jump-to-first-xref t))
+;; xref:1 ends here
 
+;; [[file:Emacs.org::*eglot][eglot:1]]
 ;;; --- LSP Support via eglot
 
 (use-package eglot
@@ -883,7 +932,9 @@ This is useful when followed by an immediate kill."
   ;; Python w/ pyright
   (add-to-list 'eglot-server-programs
 	       '(python-mode . ("pyright-langserver" "--stdio"))))
+;; eglot:1 ends here
 
+;; [[file:Emacs.org::*recentf][recentf:1]]
 ;;; --- Settings for tracking recent files
 
 (use-package recentf
@@ -898,7 +949,9 @@ This is useful when followed by an immediate kill."
 			      "TAGS"
 			      (concat package-user-dir "/.*-autoloads\\.el\\'")
 			      "ido.last")))
+;; recentf:1 ends here
 
+;; [[file:Emacs.org::*minibuffer][minibuffer:1]]
 ;;;  ---
 
 (defun switch-to-minibuffer ()
@@ -909,8 +962,9 @@ This is useful when followed by an immediate kill."
     (error "Minibuffer is not active")))
 
 (bind-key "M-m" 'switch-to-minibuffer)
+;; minibuffer:1 ends here
 
-;; [[file:../Emacs.org::*dabbrev][dabbrev:1]]
+;; [[file:Emacs.org::*dabbrev][dabbrev:1]]
 (use-package dabbrev
   ;; Swap M-/ and C-M-/
   :bind
@@ -923,6 +977,7 @@ This is useful when followed by an immediate kill."
   (setq dabbrev-case-fold-search nil))
 ;; dabbrev:1 ends here
 
+;; [[file:Emacs.org::*hippie-expand][hippie-expand:1]]
 ;;; --- Settings for hippie-expand
 
 (use-package hippie-exp
@@ -964,7 +1019,9 @@ This is useful when followed by an immediate kill."
 	  try-complete-lisp-symbol-partially
 	  ;; Try to complete word as an Emacs Lisp symbol.
 	  try-complete-lisp-symbol)))
+;; hippie-expand:1 ends here
 
+;; [[file:Emacs.org::*corfu][corfu:1]]
 ;;; --- Interactive completion in buffers
 
 ;; Corfu is responsible for interactive completion
@@ -978,7 +1035,9 @@ This is useful when followed by an immediate kill."
   (corfu-auto-prefix 3)
   (corfu-quit-no-match 'separator)
   (corfu-preview-current t))    ; Show candidate on pointer
+;; corfu:1 ends here
 
+;; [[file:Emacs.org::*Cape][Cape:1]]
 ;;; --- Cape
 
 ;; Adds more completion source backends for Corfu
@@ -1000,7 +1059,9 @@ This is useful when followed by an immediate kill."
   (completions-max-height 15)
   ;; Use TAB for completions first, then indent
   (tab-always-indent 'complete))
+;; Cape:1 ends here
 
+;; [[file:Emacs.org::*windows][windows:1]]
 ;;; --- Working with windows within frames
 
 ;; Show window number when switching
@@ -1036,7 +1097,9 @@ This is useful when followed by an immediate kill."
    ("C-S-j" . #'buf-move-down)
    ("C-S-k" . #'buf-move-up)
    ("C-S-l" . #'buf-move-right)))
+;; windows:1 ends here
 
+;; [[file:Emacs.org::*sessions][sessions:1]]
 ;;; --- Save and restore editor sessions between restarts
 
 ;; save a list of open files in ~/.emacs.d/.emacs.desktop
@@ -1087,7 +1150,9 @@ This is useful when followed by an immediate kill."
 	  (regexp-history       . 60)
 	  (regexp-search-ring   . 20)
 	  (search-ring          . 20))))
+;; sessions:1 ends here
 
+;; [[file:Emacs.org::*editing-utils][editing-utils:1]]
 ;;; --- Day-to-Day editing helpers
 
 ;; Advises kill-region "C-w" so that if no region is selected, it kills/copies the current line.
@@ -1098,7 +1163,9 @@ This is useful when followed by an immediate kill."
 		(unless mark-active
 		  (setq args (list (line-beginning-position)
 				   (line-beginning-position 2)))))))
+;; editing-utils:1 ends here
 
+;; [[file:Emacs.org::*whitespace][whitespace:1]]
 ;;; --- Special handling for whitespace
 
 ;; Show whitespace issues
@@ -1135,7 +1202,9 @@ This is useful when followed by an immediate kill."
   (global-whitespace-cleanup-mode 1))
 
 (global-set-key [remap just-one-space] 'cycle-spacing)
+;; whitespace:1 ends here
 
+;; [[file:Emacs.org::*Version Control][Version Control:1]]
 ;;; --- Version control support
 
 ;; program-specific version control packages are configured separately.
@@ -1205,7 +1274,9 @@ This is useful when followed by an immediate kill."
       (if (buffer-modified-p)
 	  (diff-buffer-with-file (current-buffer))
 	(call-interactively #'vc-diff)))))
+;; Version Control:1 ends here
 
+;; [[file:Emacs.org::*git][git:1]]
 ;;; --- Git SCM Support
 
 (use-package git-gutter
@@ -1290,7 +1361,9 @@ This is useful when followed by an immediate kill."
       (interactive)
       (setq magit-diff-options (remove "-w" magit-diff-options))
       (magit-refresh))))
+;; git:1 ends here
 
+;; [[file:Emacs.org::*github][github:1]]
 ;;; --- Github integration
 
 ;; yagist
@@ -1305,9 +1378,13 @@ This is useful when followed by an immediate kill."
 ;; todo: flymake-actionlint
 ;; todo: forge
 ;; todo: bug-reference-github
+;; github:1 ends here
 
+;; [[file:Emacs.org::*gitlab][gitlab:1]]
 ;;; --- Gitlab Integration
+;; gitlab:1 ends here
 
+;; [[file:Emacs.org::*ibuffer][ibuffer:1]]
 ;;; --- iBuffer settings
 
 (use-package ibuffer
@@ -1359,7 +1436,9 @@ This is useful when followed by an immediate kill."
 
 
   (setq ibuffer-show-empty-filter-groups nil))
+;; ibuffer:1 ends here
 
+;; [[file:Emacs.org::*projectile][projectile:1]]
 ;;; --- Projectile Project configuration
 (use-package projectile
   :ensure projectile
@@ -1397,8 +1476,9 @@ This is useful when followed by an immediate kill."
 		(ibuffer-projectile-set-filter-groups)
 		(unless (eq ibuffer-sorting-mode 'alphabetic)
 		  (ibuffer-do-sort-by-alphabetic))))))
+;; projectile:1 ends here
 
-;; [[file:../Emacs.org::*orgmode][orgmode:1]]
+;; [[file:Emacs.org::*orgmode][orgmode:1]]
 ;;; --- Org Mode Configuration
 
 (use-package org
@@ -1463,6 +1543,7 @@ This is useful when followed by an immediate kill."
     (org-journal-new-entry t)))
 ;; orgmode:1 ends here
 
+;; [[file:Emacs.org::*Rainbow Parens][Rainbow Parens:1]]
 (show-paren-mode 1)
 
 (use-package rainbow-delimiters
@@ -1482,13 +1563,17 @@ This is useful when followed by an immediate kill."
   '(rainbow-delimiters-depth-7-face ((t (:foreground "dark orange"))))
   '(rainbow-delimiters-depth-8-face ((t (:foreground "orange red"))))
   '(rainbow-delimiters-depth-9-face ((t (:foreground "red2")))))
+;; Rainbow Parens:1 ends here
 
+;; [[file:Emacs.org::*Color Strings][Color Strings:1]]
 (use-package rainbow-mode
   :straight t
   :diminish rainbow-mode "🌈"
   :hook
   ((prog-mode . rainbow-mode)))
+;; Color Strings:1 ends here
 
+;; [[file:Emacs.org::*paredit][paredit:1]]
 ;;; --- Paredit mode
 
 (use-package paredit
@@ -1499,7 +1584,9 @@ This is useful when followed by an immediate kill."
 ;;  (cider-repl-mode       . paredit-mode)
 ;;     (clojure-mode          . paredit-mode)
 ;;  (emacs-lisp-mode       . paredit-mode))
+;; paredit:1 ends here
 
+;; [[file:Emacs.org::*lisp][lisp:1]]
 ;;; --- Emacs lisp settings, and common config for other lisps
 
 (defun hplogsdon/eval-last-sexp-or-region (prefix)
@@ -1570,7 +1657,9 @@ This is useful when followed by an immediate kill."
 (use-package color-identifiers-mode
   :ensure t
   :hook ((emacs-lisp-mode . color-identifiers-mode)))
+;; lisp:1 ends here
 
+;; [[file:Emacs.org::*Clojure Mode][Clojure Mode:1]]
 ;;; --- Clojure lanaguage
 (use-package clojure-mode
   :mode (("\\.boot$" . clojure-mode)
@@ -1586,7 +1675,9 @@ This is useful when followed by an immediate kill."
 		("C-! a a" . align-cljlet)
 		:map clojurec-mode-map
 		("C-! a a" . align-cljlet))))
+;; Clojure Mode:1 ends here
 
+;; [[file:Emacs.org::*Clojure Refactor][Clojure Refactor:1]]
 (use-package clj-refactor
   :disabled
   :init
@@ -1600,7 +1691,9 @@ This is useful when followed by an immediate kill."
   (cljr-add-keybindings-with-prefix "<menu>")
   (add-to-list 'cljr-magic-require-namespaces
 	       '("s" . "clojure.spec.alpha")))
+;; Clojure Refactor:1 ends here
 
+;; [[file:Emacs.org::*CIDER][CIDER:1]]
 (use-package cider
   :bind (:map cider-repl-mode-map
 	      ("M-r" . cider-refresh)
@@ -1638,8 +1731,9 @@ This is useful when followed by an immediate kill."
 
   ;; Fix cond indenting
   (put 'cond 'clojure-backtracking-indent '(2 4 2 4 2 4 2 4 2 4 2 4 2 4 2 4 2 4 2 4 2 4 2 4 2 4 2 4 2 4 2 4 2 4 2 4 2 4 2 4 2 4 2 4 2 4 2 4 2 4)))
+;; CIDER:1 ends here
 
-;; [[file:../Emacs.org::*which-key][which-key:1]]
+;; [[file:Emacs.org::*which-key][which-key:1]]
 ;;; --- Which Key
 
 (use-package which-key
@@ -1658,7 +1752,7 @@ This is useful when followed by an immediate kill."
 (which-function-mode t)
 ;; which-key:1 ends here
 
-;; [[file:../Emacs.org::*Footer][Footer:1]]
+;; [[file:Emacs.org::*Footer][Footer:1]]
 ;; Allow access from emacsclient
 (add-hook 'after-init-hook
 	  (lambda ()
