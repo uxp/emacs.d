@@ -151,6 +151,15 @@ The following creates a lisp dir and then tells emacs to not byte-compile anythi
 
 #+END_SRC
 
+** Site Lisp Dir
+
+Site Lisp is similar, but is reserved for "vendored" modules or packages. Here we just create the file but don't specify anything. I want emacs to complain on startup if this directory doesnt exist.
+
+#+BEGIN_SRC emacs-lisp :tangle site-lisp/.dir-locals.el :mkdirp yes :comments no
+  ;;; Directory Local Variables
+  ;;; For more information see (info "(emacs) Directory Variables")
+
+#+END_SRC
 
 * Configuration
 
@@ -327,6 +336,7 @@ This is where we bootstrap our package management. This was simply configuring `
           emacs-lisp-mode
           inferior-lisp
           isearch
+  	lsp-mode
           use-package
           uniquify
           vc
@@ -1264,46 +1274,73 @@ Jump to definitions and references
 
 #+END_SRC
 
-**** DONE eglot
-CLOSED: [2025-09-17 Wed 14:09]
+**** Language Server Protocol
 
-LSP Support
+Moving to the builtin =lsp-mode= package. The main benefit to using Language Server Protocol (LSP)
+to configure the management of various programming languages is that LSP servers are also used by
+other text editors, increasing the compatibility and contributions to those packages. What could be
+better than benefiting from the larger community while keeping this text editor.
 
-https://github.com/SeanMooney/emacs/blob/d3e4d90d2fa11faa447afe8a74c26e1ff5bb267f/lit.org#general-tooling-lsp-linters-compilation
+We'll need a Language Server Protocol Client to use different LSP servers according to the programming
+languages that we'd like to use.
 
 #+BEGIN_SRC emacs-lisp :tangle init.el :comments link
-  ;;; --- LSP Support via eglot
+  ;;; --- LSP Support
 
-  (use-package eglot
+  (use-package lsp-mode
     :after (:all xref)
-    :hook (;(prog-mode      . eglot-ensure)
-  	 (python-mode    . eglot-ensure)
-  	 (python-ts-mode . eglot-ensure)
-  	 (clojure-mode   . eglot-ensure))
-    ;; turn off custom binds for now
-    ;;:bind (:map eglot-mode-map
-    ;;       ("C-c l c" . eglot-connect)
-    ;;       ("C-c l d" . flymake-show-buffer-diagnostics)
-    ;;       ("C-c l r" . eglot-rename)
-    ;;       ("C-c l f" . eglot-format)
-    ;;       ("C-c l F" . eglot-format-buffer)
-    ;;       ("C-c l l" . eglot)
-    ;;       ("C-c l i" . eglot-inlay-hints-mode)
-    ;;       ("C-c l s" . eglot-shutdown)
-    ;;       ("C-c l C" . eglot-code-actions))
+    :commands (lsp lsp-deferred)
+    :hook ((prog-mode . lsp-deferred))
 
     :custom
-    (eglot-autoshutdown t)
-    (eglot-send-changes-idle-time 0.1)
+    (lsp-enable-folding nil)
+    (lsp-enable-links nil)
+    (lsp-enable-snippet nil)
+    (lsp-keymap-prefix "C-c ;")
+    (lsp-session-file (expand-file-name "lsp-session-v1" emacs-user-directory))
+    (read-process-output-max (* 1024 1024)))
 
+#+END_SRC
+
+In addition to =lsp-mode= we can use =lsp-ui= to display additional information, such as documentation,
+when hovering a variable or function.
+
+#+BEGIN_SRC emacs-lisp :tangle init.el :comments link
+  (use-package lsp-ui
+    :after lsp-mode
+    :commands lsp-ui-mode
+    :hook (lsp-mode . lsp-ui-mode)
+    :custom-face
+    (lsp-ui-doc-background ((t (:background nil))))
+    (lsp-ui-doc-header ((t (:inherit (font-lock-string-face italic)))))
+    :bind (:map lsp-ui-mode-map
+  	      ([remap xref-find-definitions] . lsp-ui-peek-find-definitions)
+  	      ([remap xref-find-references] . lsp-ui-peek-find-references)
+  	      ("C-c u" . lsp-ui-imenu))
+    :custom
+    (lsp-ui-doc-enable t)
+    (lsp-ui-doc-header t)
+    (lsp-ui-doc-include-signature t)
+    (lsp-ui-doc-position 'top)
+    (lsp-ui-doc-border (face-foreground 'default))
+    (lsp-ui-sideline-enable t)
+    (lsp-ui-sideline-ignore-duplicate t)
+    (lsp-ui-sideline-show-code-actions nil))
+
+#+END_SRC
+
+We could also use =consult-lsp= here if we were using it instead of ibuffer.
+
+
+=dap-mode= is the Debug Adapter Protocol wire protocol for communication between clients and Debug servers.
+
+#+BEGIN_SRC emacs-lisp :tangle init.el :comments link
+  (use-package dap-mode
+    :after lsp-mode
     :config
-    (add-to-list 'eglot-server-programs
-  	       '((c++-mode c-mode) "clangd"))
-    ;; Python w/ pyright
-    (add-to-list 'eglot-server-programs
-  	       '(python-mode . ("pyright-langserver" "--stdio"))))
-
-
+    (dap-mode t)
+    (dap-ui-mode t))
+    
 #+END_SRC
 
 **** recentf
@@ -1939,8 +1976,6 @@ CLOSED: [2025-09-18 Thu 15:29]
 
 **** ibuffer
 
-**** ibuffer
-
 TODO move to =consult-project-buffer= ? ibuffer is builtin, and maybe we should be think about using more builtin packages
 
 #+BEGIN_SRC emacs-lisp :tangle init.el :comments link
@@ -2069,9 +2104,31 @@ exists as well).
 
 **** TODO markdown
 
-**** TODO csv
+To edit Markdown files, use 
+
+#+BEGIN_SRC emacs-lisp :tangle init.el :comments link
+  (use-package markdown-mode
+    :mode ("\\.\\(md\\|markdown\\)\\'"))
+  
+#+END_SRC
+
+**** DONE csv
+CLOSED: [2025-09-21 Sun 11:17]
+
+Ergonomics. =csv-mode= provides color syntax when editing CSV files.
+
+#+BEGIN_SRC emacs-lisp :tangle init.el :comments link
+  (use-package csv-mode
+    :mode ("\\.\\(csv\\|tsv\\)\\'"))
+  
+#+END_SRC
 
 **** TODO javascript
+
+
+#+BEGIN_SRC emacs-lisp :tangle init.el :comments link
+    
+#+END_SRC
 
 **** DONE orgmode
 CLOSED: [2025-09-17 Wed 13:51]
@@ -2144,8 +2201,35 @@ Org Mode : Organizational tool in Emacs for note-taking, TODO lists, project pla
 
 #+END_SRC
 
+**** Java
+
+To support Java, we'll use [[https://github.com/emacs-lsp/lsp-java][lsp-java]] as an LSP client with [[https://projects.eclipse.org/projects.eclipse.jdt.ls][Eclipse JDT Language Server]] as
+LSP server. To use it, do not forget to configure the LSP package to to install this LSP
+Server through LSP mode or with a system package manager. If the LSP server is not yet
+installed, LSP will install it in the =~/.emacs.d/.cache/lsp/eclipse.jdt.ls= directory.
+This can be altered with =lsp-java-server-install-dir=.
+
+#+BEGIN_SRC emacs-lisp :tangle init.el :comments link
+  (use-package lsp-java
+    :hook (java-mode . lsp-deferred))
+  
+#+END_SRC
 
 **** TODO nxml
+
+To manage XML files, we use =nxml-mode= package built in to Emacs with LemMinX LSP server.
+To use it, we need to ensure the LSP mode is installed.
+
+#+BEGIN_SRC emacs-lisp :tangle init.el :comments link
+  ;;; --- XML
+
+  (use-package nxml-mode
+    :ensure nil ;; builtin
+    :hook (nxml-mode . lsp-deferred)
+    :mode ("\\.\\(xml\\|xsd\\|wsdl\\)\\'")
+    )
+
+#+END_SRC
 
 **** TODO html
 
@@ -2161,12 +2245,29 @@ Org Mode : Organizational tool in Emacs for note-taking, TODO lists, project pla
 
 **** TODO docker
 
+To support Dockerfiles with LSP, the package =dockerfile-mode= with dockerfile-language-server-nodejs
+(=dockerfile-ls=) is enough. To use it, do not forget to configure the LSP package and to  install this
+LSP server through LSP-mode or with a system package manager.
+
+#+BEGIN_SRC emacs-lisp :tangle init.el :comments link
+  (use-package dockerfile-mode
+    :mode "Dockerfile\\'")
+  
+#+END_SRC
+
 **** TODO terraform
 
 **** TODO nginx
 
-**** TODO just
+**** ini Files
 
+INI files are ubiquitous.
+
+#+BEGIN_SRC emacs-lisp :tangle init.el :comments link
+  (use-package ini-mode
+    :mode "\\.ini\\'")
+  
+#+END_SRC
 
 *** Lisps
 
@@ -2318,11 +2419,12 @@ Paredit mode essentially orces you to edit on sexps, rather than text. It's hard
 #+BEGIN_SRC emacs-lisp :tangle init.el :comments link
   ;;; --- Clojure lanaguage
   (use-package clojure-mode
-    :mode (("\\.boot$" . clojure-mode)
-  	 ("\\.clj$"  . clojure-mode)
-  	 ("\\.cljc$" . clojure-mode)
-  	 ("\\.cljs$" . clojurescript-mode)
-  	 ("\\.edn$"  . clojure-mode))
+    :mode (("\\.boot$"  . clojure-mode)
+  	 ("\\.clj$"   . clojure-mode)
+  	 ("\\.cljc$"  . clojure-mode)
+  	 ("\\.cljs$"  . clojurescript-mode)
+  	 ("\\.edn$"   . clojure-mode)
+  	 ("lein-env$" . clojure-mode)
     :config
     (use-package align-cljlet
       :bind (:map clojure-mode-map
@@ -2359,19 +2461,39 @@ Paredit mode essentially orces you to edit on sexps, rather than text. It's hard
 #+begin_src emacs-lisp :tangle init.el :comments link
   (use-package cider
     :bind (:map cider-repl-mode-map
-  	      ("M-r" . cider-refresh)
-  	      ("C-c r" . cider-repl-reset)
-  	      ("M-R" . hpl/cider-user-repl-tools))
+  	 ("M-r" . cider-refresh)
+  	 ("C-c r" . cider-repl-reset)
+  	 ("M-R" . hpl/cider-user-repl-tools)
+  	 :map clojure-mode-map
+  	 ("C-M-r" . hpl/cider-refresh)
+  	 ("C-c C-v" . hpl/cider-start-http-server)
+  	 ("C-c u" . hpl/cider-user-ns)
+  	 :map cider-mode-map
+  	 ("C-c u" . hpl/cider-user-ns))
+    
+    :hook
+    (;; Enable paredit in the cider REPL
+     ;;(cider-mode . paredit-mode)
+     ;; Provides minibuffer docs when writing to the REPL
+     (cider-mode . cider-turn-on-eldoc-mode))  
+    
     :config
     (setq nrepl-hide-special-buffers t
   	nrepl-popup-stacktraces-in-repl t
   	nrepl-history-file "~/.emacs.d/nrepl-history"
-  	cider-repl-history-file ".cider-repl-history"
+
   	cider-mode-line " CIDER"
   	cider-repl-display-in-current-window t
-  	cider-auto-select-error-buffer nil
-  	cider-repl-pop-to-buffer-on-connect nil
+  	;; Where to store cider history
+  	cider-repl-history-file "~/.emacs.d/.cider-repl-history"
+  	;; Go right to the REPL when it connects
+  	cider-repl-pop-to-buffer-on-connect t
+  	;; When there is a cider error, show its buffer and switch to it
   	cider-show-error-buffer nil
+  	cider-auto-select-error-buffer nil
+  	;; wrap when navigating history
+  	cider-repl-wrap-history t
+  	
   	cider-repl-use-pretty-printing t
   	cider-cljs-lein-repl "(do (use 'figwheel-sidecar.repl-api) (start-figwheel!) (cljs-repl))")
 
@@ -2379,6 +2501,22 @@ Paredit mode essentially orces you to edit on sexps, rather than text. It's hard
       (interactive)
       (cider-interactive-repl
        "(use 'clojure.repl)"))
+
+    (defun hpl/cider-start-http-server ()
+      (interactive)
+      (cider-load-current-buffer)
+      (let ((ns (cider-current-ns)))
+        (cider-repl-set-ns ns)
+        (cider-interactive-eval (format "(println '(def server (%s/start))) (println 'server)" ns))
+        (cider-interactive-eval (format "(def server (%s/start)) (println server)" ns))))
+
+    (defun hpl/cider-refresh ()
+      (interactive)
+      (cider-interactive-eval "(user/reset)"))
+
+    (defun hpl/cider-user-ns ()
+      (interactive)
+      (cider-repl-set-ns "user"))        
 
     (fset 'cider-eval-last-sexp-and-comment
   	"\C-u\C-x\C-e\C-a\260 ;; \C-e")
@@ -2433,33 +2571,29 @@ Silly things that I find make a more enjoyable experience
 
 Terminal Emulators in Emacs
 
-#+BEGIN_SRC emacs-lisp :tangle lisp/init-terminals.el
-  ;;; init-terminal.el --- Example -*- lexical-binding: t -*-
-  ;;; Commentary:
-  ;;; Code:
-
-  ;;
+#+BEGIN_SRC emacs-lisp :tangle init.el
+  ;;; --- Terminals in Emacs
+  
   ;;(use-package vterm
   ;;  :ensure t)
 
   ;;(use-package eat
   ;;  :ensure t)
 
-  (provide 'init-terminal)
-  ;;; init-terminal.el ends here
 #+END_SRC
 
 **** TODO Claude code
 
 Guess we can do this here. Might as well try it
 
-#+BEGIN_SRC emacs-lisp :tangle lisp/init-claude.el
+#+BEGIN_SRC emacs-lisp :tangle init.el
   ;;; --- Anthropic Claude Code
 
   (use-package claude-code
     :ensure t
     :after (:any eat vterm)
-    :vc (:url "https://github.com/stevemolitor/claude-code.el" :rev :newest)
+    :straight
+    (claude-code :type git :host github :repo "stevemolitor/claude-code.el")
 
     :config
     (claude-code-mode)
