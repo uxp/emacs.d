@@ -8,6 +8,12 @@
 auto-save-list
 tramp
 .\#*
+.session
+eln-cache/
+straight/
+/history
+/recentf
+
 
 # Org-mode
 .org-id-locations
@@ -107,6 +113,3 @@ Icon
 Network Trash Folder
 Temporary Items
 .apdisk
-
-eln-cache/
-straight/

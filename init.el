@@ -1757,7 +1757,7 @@ This is useful when followed by an immediate kill."
 	 ("\\.cljc$"  . clojure-mode)
 	 ("\\.cljs$"  . clojurescript-mode)
 	 ("\\.edn$"   . clojure-mode)
-	 ("lein-env$" . clojure-mode)
+	 ("lein-env$" . clojure-mode))
   :config
   (use-package align-cljlet
     :bind (:map clojure-mode-map
