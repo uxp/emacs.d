@@ -336,12 +336,12 @@ This is where we bootstrap our package management. This was simply configuring `
           emacs-lisp-mode
           inferior-lisp
           isearch
-  	lsp-mode
+          lsp-mode
+          nxml-mode
           use-package
           uniquify
           vc
-          which-function-mode
-          ))
+          which-function-mode))
 
 
   ;; The following is probably unused, but I'm not deleting it yet.
@@ -2224,7 +2224,7 @@ To use it, we need to ensure the LSP mode is installed.
   ;;; --- XML
 
   (use-package nxml-mode
-    :ensure nil ;; builtin
+    :straight nil ;; builtin
     :hook (nxml-mode . lsp-deferred)
     :mode ("\\.\\(xml\\|xsd\\|wsdl\\)\\'")
     )

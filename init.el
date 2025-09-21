@@ -137,11 +137,11 @@ LOAD-DURATION is the time taken in milliseconds to load FEATURE.")
         inferior-lisp
         isearch
 	lsp-mode
+	nxml-mdoe
         use-package
         uniquify
         vc
-        which-function-mode
-        ))
+        which-function-mode))
 
 
 ;; The following is probably unused, but I'm not deleting it yet.
@@ -1617,7 +1617,7 @@ This is useful when followed by an immediate kill."
 ;;; --- XML
 
 (use-package nxml-mode
-  :ensure nil ;; builtin
+  :straight nil ;; builtin
   :hook (nxml-mode . lsp-deferred)
   :mode ("\\.\\(xml\\|xsd\\|wsdl\\)\\'")
   )
