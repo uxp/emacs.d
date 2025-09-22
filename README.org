@@ -337,6 +337,7 @@ This is where we bootstrap our package management. This was simply configuring `
           inferior-lisp
           isearch
           lsp-mode
+          mwheel
           nxml-mode
           use-package
           uniquify
@@ -611,7 +612,7 @@ This is where I put random functions that help with random tasks.
 
 #+END_SRC
 
-**** Lisp directory (aka, `vendor')
+**** Lisp directories (aka, `vendor')
 
 Prepares the "site-lisp" directory for later use. Think `site-packages` in Python, or `vendor` in older Ruby projects. If we need to install an Elisp module into Emacs, but we don't want to consider it a part of our configuration, we can stick it in =~/.emacs.d/site-lisp/=, and be sure it will be available later.
 
@@ -928,6 +929,17 @@ This sets up emoji rendering. Required installation of the [[github.com/googlefo
 
 #+END_SRC
 
+The following two items are extra syntax highlighting packages that specifically target magic numbers and escape sequences, respectfully.
+
+#+BEGIN_SRC emacs-lisp :tangle init.el :comments link
+  (use-package highlight-numbers
+    :hook (prog-mode . highlight-numbers-mode))
+
+  (use-package highlight-escape-sequences
+    :hook (prog-mode . hes-mode))
+
+#+END_SRC
+
 **** GUI Frames
 
 #+BEGIN_SRC emacs-lisp :tangle init.el :comments link
@@ -1084,10 +1096,29 @@ Unset common movement, which hopefully should start to force muscle memory to th
   ;;  (global-unset-key [M-right])
 #+END_SRC
 
+**** Mouse / Trackpad
+
+By default, scrolling can be way too fast to be useful. This tunes is down just a little
+
+#+BEGIN_SRC emacs-lisp :tangle init.el :comments link
+  (use-package mwheel
+    :ensure nil ;; builtin
+    :config (setq mouse-wheel-scroll-amount '(2 ((shift) . 1))
+                  mouse-wheel-progressive-speed nil))
+
+#+END_SRC
 
 *** File Management
 
 Searching, Finding, Buffer management
+
+
+#+BEGIN_SRC emacs-lisp :tangle init.el :comments link
+  (setq confirm-kill-processes nil
+        create-lockfiles nil          ;; Dont create .# files
+        make-backup-files nil)
+
+#+END_SRC
 
 **** dired
 
@@ -2269,11 +2300,11 @@ INI files are ubiquitous.
 
 #+END_SRC
 
-*** Lisps
+**** Lisps
 
-**** Parentheses
+***** Parentheses
 
-***** Rainbow Parens
+****** Rainbow Parens
 
 #+BEGIN_SRC emacs-lisp :tangle init.el :comments link
   (show-paren-mode 1)
@@ -2298,7 +2329,7 @@ INI files are ubiquitous.
 
 #+END_SRC
 
-***** Color Strings
+****** Color Strings
 
 TODO move this somewhere else.
 
@@ -2312,7 +2343,7 @@ TODO move this somewhere else.
 
 #+END_SRC
 
-***** paredit
+****** paredit
 
 Paredit mode essentially orces you to edit on sexps, rather than text. It's hard to describe, and is kind of hard to use.
 
@@ -2333,7 +2364,7 @@ Paredit mode essentially orces you to edit on sexps, rather than text. It's hard
 
 #+END_SRC
 
-**** lisp
+***** lisp
 
 
 #+BEGIN_SRC emacs-lisp :tangle init.el :comments link
@@ -2390,6 +2421,7 @@ Paredit mode essentially orces you to edit on sexps, rather than text. It's hard
 
   (use-package emacs-lisp-mode
     :defer t
+    :diminish "λ"
     :hook ((emacs-lisp-mode . outline-minor-mode)
            (emacs-lisp-mode . reveal-mode)
            (emacs-lisp-mode . eldoc-mode))
@@ -2411,10 +2443,9 @@ Paredit mode essentially orces you to edit on sexps, rather than text. It's hard
 
 #+END_SRC
 
-**** TODO clojure
+***** TODO clojure
 
-
-***** Clojure Mode
+****** Clojure Mode
 
 #+BEGIN_SRC emacs-lisp :tangle init.el :comments link
   ;;; --- Clojure lanaguage
@@ -2424,7 +2455,7 @@ Paredit mode essentially orces you to edit on sexps, rather than text. It's hard
            ("\\.cljc$"  . clojure-mode)
            ("\\.cljs$"  . clojurescript-mode)
            ("\\.edn$"   . clojure-mode)
-           ("lein-env$" . clojure-mode)
+           ("lein-env$" . clojure-mode))
   	 :config
   	 (use-package align-cljlet
   	   :bind (:map clojure-mode-map
@@ -2436,7 +2467,7 @@ Paredit mode essentially orces you to edit on sexps, rather than text. It's hard
 
 #+END_SRC
 
-***** Clojure Refactor
+****** Clojure Refactor
 
 
 #+BEGIN_SRC emacs-lisp :tangle init.el :comments link
@@ -2456,7 +2487,7 @@ Paredit mode essentially orces you to edit on sexps, rather than text. It's hard
 
 #+END_SRC
 
-***** CIDER
+****** CIDER
 
 #+begin_src emacs-lisp :tangle init.el :comments link
   (use-package cider
@@ -2563,6 +2594,20 @@ Silly things that I find make a more enjoyable experience
 
 #+END_SRC
 
+**** Dashboard
+
+This dashboard should show up instead of the welcome page, and is a place we can display agenda or tasks coming from org-mode,
+as well as any additional enhancements we need.
+
+#+BEGIN_SRC emacs-lisp :tangle init.el :comments link
+  (use-package dashboard
+    :config
+    (setq dashboard-startup-banner 'logo
+          dashboard-banner-logo-title "EMACS!"
+          dashboard-items nil
+          dashboard-set-footer nil))
+
+#+END_SRC
 
 **** TODO spellcheck
 
@@ -2619,6 +2664,15 @@ Guess we can do this here. Might as well try it
 *** TODO uptimes
 
 *** TODO eldoc
+
+#+BEGIN_SRC emacs-lisp :tangle init.el :comments link
+  (use-package eldoc
+    :ensure nil ;; builtin
+    ;;:diminish eldoc-mode
+    :config
+    (setq eldoc-idle-delay 0.4))
+
+#+END_SRC
 
 *** TODO direnv
 

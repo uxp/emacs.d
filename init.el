@@ -136,8 +136,9 @@ LOAD-DURATION is the time taken in milliseconds to load FEATURE.")
         emacs-lisp-mode
         inferior-lisp
         isearch
-	lsp-mode
-	nxml-mdoe
+        lsp-mode
+	mwheel
+        nxml-mode
         use-package
         uniquify
         vc
@@ -375,7 +376,7 @@ region-end are used. Adds the duplicated text to the kill ring."
 (bind-key "C-c w" 'hpl/cleanup-whitespace)
 ;; Whitespace:1 ends here
 
-;; [[file:README.org::*Lisp directory (aka, `vendor')][Lisp directory (aka, `vendor'):1]]
+;; [[file:README.org::*Lisp directories (aka, `vendor')][Lisp directories (aka, `vendor'):1]]
 ;;; --- Support elisp manually installed in the site-lisp dir
 
 ;; This must come before `elpa', as it may provide package.el
@@ -425,7 +426,7 @@ region-end are used. Adds the duplicated text to the kill ring."
 under ~/.emacs.d/site-lisp/NAME"
   (let ((f (locate-library (symbol-name name))))
     (and f (string-prefix-p (file-name-as-directory (site-lisp-dir-for name)) f))))
-;; Lisp directory (aka, `vendor'):1 ends here
+;; Lisp directories (aka, `vendor'):1 ends here
 
 ;; [[file:README.org::*Exec Path][Exec Path:1]]
 ;;; --- Setup exec-path to help Emacs find packages
@@ -621,6 +622,14 @@ Selectively runs either `after-make-console-frame-hooks' or
   (load-theme 'monokai-pro t))
 ;; Themes:1 ends here
 
+;; [[file:README.org::*Themes][Themes:2]]
+(use-package highlight-numbers
+  :hook (prog-mode . highlight-numbers-mode))
+
+(use-package highlight-escape-sequences
+  :hook (prog-mode . hes-mode))
+;; Themes:2 ends here
+
 ;; [[file:README.org::*GUI Frames][GUI Frames:1]]
 ;;; --- Non-TTY frames behavior
 
@@ -748,6 +757,19 @@ Selectively runs either `after-make-console-frame-hooks' or
 ;;  (global-unset-key [M-left])
 ;;  (global-unset-key [M-right])
 ;; Unset conveniences.:2 ends here
+
+;; [[file:README.org::*Mouse / Trackpad][Mouse / Trackpad:1]]
+(use-package mwheel
+  :ensure nil ;; builtin
+  :config (setq mouse-wheel-scroll-amount '(2 ((shift) . 1))
+		mouse-wheel-progressive-speed nil))
+;; Mouse / Trackpad:1 ends here
+
+;; [[file:README.org::*File Management][File Management:1]]
+(setq confirm-kill-processes nil
+      create-lockfiles nil          ;; Dont create .# files
+      make-backup-files nil)
+;; File Management:1 ends here
 
 ;; [[file:README.org::*dired][dired:1]]
 ;;; --- Dired customization
@@ -1730,6 +1752,7 @@ This is useful when followed by an immediate kill."
 
 (use-package emacs-lisp-mode
   :defer t
+  :diminish "λ"
   :hook ((emacs-lisp-mode . outline-minor-mode)
 	 (emacs-lisp-mode . reveal-mode)
 	 (emacs-lisp-mode . eldoc-mode))
@@ -1753,19 +1776,19 @@ This is useful when followed by an immediate kill."
 ;;; --- Clojure lanaguage
 (use-package clojure-mode
   :mode (("\\.boot$"  . clojure-mode)
-	 ("\\.clj$"   . clojure-mode)
-	 ("\\.cljc$"  . clojure-mode)
-	 ("\\.cljs$"  . clojurescript-mode)
-	 ("\\.edn$"   . clojure-mode)
-	 ("lein-env$" . clojure-mode))
-  :config
-  (use-package align-cljlet
-    :bind (:map clojure-mode-map
-		("C-! a a" . align-cljlet)
-		:map clojurescript-mode-map
-		("C-! a a" . align-cljlet)
-		:map clojurec-mode-map
-		("C-! a a" . align-cljlet))))
+         ("\\.clj$"   . clojure-mode)
+         ("\\.cljc$"  . clojure-mode)
+         ("\\.cljs$"  . clojurescript-mode)
+         ("\\.edn$"   . clojure-mode)
+         ("lein-env$" . clojure-mode))
+	 :config
+	 (use-package align-cljlet
+	   :bind (:map clojure-mode-map
+                       ("C-! a a" . align-cljlet)
+                       :map clojurescript-mode-map
+                       ("C-! a a" . align-cljlet)
+                       :map clojurec-mode-map
+                       ("C-! a a" . align-cljlet))))
 ;; Clojure Mode:1 ends here
 
 ;; [[file:README.org::*Clojure Refactor][Clojure Refactor:1]]
@@ -1862,7 +1885,6 @@ This is useful when followed by an immediate kill."
 
 ;; [[file:README.org::*which-key][which-key:1]]
 ;;; --- Which Key
-
 (use-package which-key
   :ensure t
   :diminish ""
@@ -1879,6 +1901,15 @@ This is useful when followed by an immediate kill."
 (which-function-mode t)
 ;; which-key:1 ends here
 
+;; [[file:README.org::*Dashboard][Dashboard:1]]
+(use-package dashboard
+  :config
+  (setq dashboard-startup-banner 'logo
+	dashboard-banner-logo-title "EMACS!"
+	dashboard-items nil
+	dashboard-set-footer nil))
+;; Dashboard:1 ends here
+
 ;;; --- Terminals in Emacs
 
 ;;(use-package vterm
@@ -1888,7 +1919,6 @@ This is useful when followed by an immediate kill."
 ;;  :ensure t)
 
 ;;; --- Anthropic Claude Code
-
 (use-package claude-code
   :ensure t
   :after (:any eat vterm)
@@ -1903,6 +1933,14 @@ This is useful when followed by an immediate kill."
 
   :bind-keymap
   ("C-c C" . claude-code-command-mode))
+
+;; [[file:README.org::*eldoc][eldoc:1]]
+(use-package eldoc
+  :ensure nil ;; builtin
+  ;;:diminish eldoc-mode
+  :config
+  (setq eldoc-idle-delay 0.4))
+;; eldoc:1 ends here
 
 ;; [[file:README.org::*Footer][Footer:1]]
 ;; Allow access from emacsclient
