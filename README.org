@@ -649,6 +649,51 @@ This is where I put random functions that help with random tasks.
 
 #+END_SRC
 
+***** Moving
+
+C-v and M-v don't undo each other, because the point position isn't
+preserved. Fix that
+
+#+BEGIN_SRC emacs-lisp :tangle init.el :comments link
+  (setq scroll-preserve-screen-position 'always)
+#+END_SRC
+
+It's useful to be able to move between occurrences of the same
+symbol.
+
+#+BEGIN_SRC emacs-lisp :tangle init.el :comments link
+  (defun hpl/highlight-symbol-first ()
+    "Jump to the first occurance of symbol at point"
+    (interactive)
+    (push-mark)
+    (eval
+     `(progn
+        (goto-char (point-min))
+        (let ((case-fold-search nil))
+          (search-forward-regexp
+           (rx symbol-start ,(thing-at-point 'symbol) symbol-end)
+           nil t))
+        (beginning-of-thing 'symbol))))
+
+  (defun hpl/highlight-symbol-last ()
+    "Jump to the last occurrance of symbol at point"
+    (interactive)
+    (push-mark)
+    (eval
+     `(progn
+        (goto-char (point-max))
+        (let ((case-fold-search nil))
+          (search-backward-regexp
+           (rx symbol-start ,(thing-at-point 'symbol) symbol-end)
+           nil t)))))
+
+  (define-key prog-mode-map (kbd "M-P") #'hpl/highlight-symbol-first)
+  (define-key prog-mode-map (kbd "M-N") #'hpl/highlight-symbol-last)
+
+
+#+END_SRC
+
+
 **** Lisp directories (aka, `vendor')
 
 Prepares the "site-lisp" directory for later use. Think `site-packages` in Python, or `vendor` in older Ruby projects. If we need to install an Elisp module into Emacs, but we don't want to consider it a part of our configuration, we can stick it in =~/.emacs.d/site-lisp/=, and be sure it will be available later.
@@ -1489,7 +1534,7 @@ TODO Add `emmet-mode` here ?
             ;; Try to complete the current line to an entire line in a different buffer.
             try-expand-line-all-buffers
             ;; Try to complete text using flyspell
-  					;try-flyspell
+                                          ;try-flyspell
             ;; Try to complete as an Emacs Lisp symbol, as many characters are unique.
             try-complete-lisp-symbol-partially
             ;; Try to complete word as an Emacs Lisp symbol.

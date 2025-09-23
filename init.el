@@ -404,6 +404,40 @@ region-end are used. Adds the duplicated text to the kill ring."
 (bind-key "C-c w" 'hpl/cleanup-whitespace)
 ;; Whitespace:1 ends here
 
+;; [[file:README.org::*Moving][Moving:1]]
+(setq scroll-preserve-screen-position 'always)
+;; Moving:1 ends here
+
+;; [[file:README.org::*Moving][Moving:2]]
+(defun hpl/highlight-symbol-first ()
+  "Jump to the first occurance of symbol at point"
+  (interactive)
+  (push-mark)
+  (eval
+   `(progn
+      (goto-char (point-min))
+      (let ((case-fold-search nil))
+        (search-forward-regexp
+         (rx symbol-start ,(thing-at-point 'symbol) symbol-end)
+         nil t))
+      (beginning-of-thing 'symbol))))
+
+(defun hpl/highlight-symbol-last ()
+  "Jump to the last occurrance of symbol at point"
+  (interactive)
+  (push-mark)
+  (eval
+   `(progn
+      (goto-char (point-max))
+      (let ((case-fold-search nil))
+        (search-backward-regexp
+         (rx symbol-start ,(thing-at-point 'symbol) symbol-end)
+         nil t)))))
+
+(define-key prog-mode-map (kbd "M-P") #'hpl/highlight-symbol-first)
+(define-key prog-mode-map (kbd "M-N") #'hpl/highlight-symbol-last)
+;; Moving:2 ends here
+
 ;; [[file:README.org::*Lisp directories (aka, `vendor')][Lisp directories (aka, `vendor'):1]]
 ;; Set load path
 (require 'cl-lib)
@@ -1035,7 +1069,7 @@ This is useful when followed by an immediate kill."
           ;; Try to complete the current line to an entire line in a different buffer.
           try-expand-line-all-buffers
           ;; Try to complete text using flyspell
-          ;try-flyspell
+                                        ;try-flyspell
           ;; Try to complete as an Emacs Lisp symbol, as many characters are unique.
           try-complete-lisp-symbol-partially
           ;; Try to complete word as an Emacs Lisp symbol.
@@ -1862,25 +1896,25 @@ This is useful when followed by an immediate kill."
   :config
   (setq dashboard-startup-banner 'logo
         dashboard-banner-logo-title "Welcome to Emacs"
-	dashboard-center-content 't
-	dashboard-display-icons-p 't
-	dashboard-icon-type 'nerd-icons
-	dashboard-items '((recents  . 5)
-			  (projects . 5)
-			  (agenda   . 5))
-	dashboard-item-shortcuts '((recents  . "r")
-				   (projects . "p")
-				   (agenda   . "a"))
-	dashboard-item-names '(("Recent Files:"               . "Recently opened files:")
-			       ("Agenda for today:"           . "Today's agenda:")
-			       ("Agenda for the coming week:" . "Agenda:"))
+        dashboard-center-content 't
+        dashboard-display-icons-p 't
+        dashboard-icon-type 'nerd-icons
+        dashboard-items '((recents  . 5)
+                          (projects . 5)
+                          (agenda   . 5))
+        dashboard-item-shortcuts '((recents  . "r")
+                                   (projects . "p")
+                                   (agenda   . "a"))
+        dashboard-item-names '(("Recent Files:"               . "Recently opened files:")
+                               ("Agenda for today:"           . "Today's agenda:")
+                               ("Agenda for the coming week:" . "Agenda:"))
 
 
-	dashboard-projects-backend 'projectile
-	dashboard-set-heading-icons 't
-	dashboard-set-file-icons 't
+        dashboard-projects-backend 'projectile
+        dashboard-set-heading-icons 't
+        dashboard-set-file-icons 't
         dashboard-set-footer nil
-	dashboard-week-agenda 't)
+        dashboard-week-agenda 't)
   (add-to-list 'dashboard-items '(agenda) t)
 
   (setq initial-buffer-choice (lambda () (get-buffer-create dashboard-buffer-name))))
