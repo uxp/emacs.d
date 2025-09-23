@@ -1634,8 +1634,22 @@ This is useful when followed by an immediate kill."
   (setq auto-mode-list '("\\.py\\'" . python-mode))
   (autoload 'python-mode "python-mode" "Python Mode." t)
   :hook ((python-mode . pyenv-mode)
-	 (python-mode . company-mode)))
+         (python-mode . company-mode))
+  :config
+  (setq python-shell-interpreter "python3"
+	python-shell-interpreter-args "-i"))
 ;; python:1 ends here
+
+;; [[file:README.org::*yaml][yaml:1]]
+(use-package yaml-mode
+  :bind (:map yaml-mode-map
+              ("M-n" . hpl/highlight-symbol-next)
+              ("M-p" . hpl/highlight-symbol-prev)
+              ("M-N" . hpl/highlight-symbol-last)
+              ("M-P" . hpl/highlight-symbol-first)))
+
+(define-derived-mode helm-mode yaml-mode "helm" "Major mode for editing K8s Helm Chart Templates")
+;; yaml:1 ends here
 
 ;; [[file:README.org::*docker][docker:1]]
 (use-package dockerfile-mode
