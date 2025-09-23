@@ -1593,6 +1593,16 @@ This is useful when followed by an immediate kill."
   )
 ;; nxml:1 ends here
 
+;; [[file:README.org::*python][python:1]]
+(use-package python-mode
+  :straight nil ;; builtin
+  :init
+  (setq auto-mode-list '("\\.py\\'" . python-mode))
+  (autoload 'python-mode "python-mode" "Python Mode." t)
+  :hook ((python-mode . pyenv-mode)
+	 (python-mode . company-mode)))
+;; python:1 ends here
+
 ;; [[file:README.org::*docker][docker:1]]
 (use-package dockerfile-mode
   :mode "Dockerfile\\'")
@@ -1845,11 +1855,35 @@ This is useful when followed by an immediate kill."
 
 ;; [[file:README.org::*Dashboard][Dashboard:1]]
 (use-package dashboard
+  :init
+  (dashboard-setup-startup-hook)
+  :hook
+  ((dashboard-mode . (lambda () (setq-local show-trailing-whitespace nil))))
   :config
   (setq dashboard-startup-banner 'logo
-        dashboard-banner-logo-title "EMACS!"
-        dashboard-items nil
-        dashboard-set-footer nil))
+        dashboard-banner-logo-title "Welcome to Emacs"
+	dashboard-center-content 't
+	dashboard-display-icons-p 't
+	dashboard-icon-type 'nerd-icons
+	dashboard-items '((recents  . 5)
+			  (projects . 5)
+			  (agenda   . 5))
+	dashboard-item-shortcuts '((recents  . "r")
+				   (projects . "p")
+				   (agenda   . "a"))
+	dashboard-item-names '(("Recent Files:"               . "Recently opened files:")
+			       ("Agenda for today:"           . "Today's agenda:")
+			       ("Agenda for the coming week:" . "Agenda:"))
+
+
+	dashboard-projects-backend 'projectile
+	dashboard-set-heading-icons 't
+	dashboard-set-file-icons 't
+        dashboard-set-footer nil
+	dashboard-week-agenda 't)
+  (add-to-list 'dashboard-items '(agenda) t)
+
+  (setq initial-buffer-choice (lambda () (get-buffer-create dashboard-buffer-name))))
 ;; Dashboard:1 ends here
 
 ;;; --- Terminals in Emacs
