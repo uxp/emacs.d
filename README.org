@@ -171,14 +171,38 @@ Declare what the file is and what its for.
 
 #+BEGIN_SRC emacs-lisp :tangle init.el :mkdirp yes :comments no
   ;;; init.el --- Local Initialization File -*- lexical-binding: t -*-
+  ;;
+  ;; Copyright (c) 2016 - 2025 Howard Logsdon
+  ;;
+  ;; Author: Howard Logsdon <uxp@hplogsdon.com>
+  ;; URL: https://github.com/uxp/emacs.d
+  ;; Keywords: shitshow
+
+  ;; This file is not part of GNU Emacs.
+
   ;;; Commentary:
-  ;;;   This config targets Emacs 30, and is automatically generated via
-  ;;;   Org-Mode Tangled file README.org
-  ;;;
-  ;;;   Written by hplogsdon (https://gitlab.com/hplogdon/dotfiles)
-  ;;;
-  ;;;   Do not edit this by hand.
-  ;;;
+
+  ;;   This config targets Emacs 30, and is automatically generated via
+  ;;   Org-Mode Tangled file README.org
+  ;;   Do not edit this by hand.
+
+  ;;; License:
+
+  ;; This program is free software; you can redistribute it and/or
+  ;; modify it under the terms of the GNU General Public License
+  ;; as published by the Free Software Foundation; either version 3
+  ;; of the License, or (at your option) any later version.
+  ;;
+  ;; This program is distributed in the hope that it will be useful,
+  ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ;; GNU General Public License for more details.
+  ;;
+  ;; You should have received a copy of the GNU General Public License
+  ;; along with GNU Emacs; see the file COPYING.  If not, write to the
+  ;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+  ;; Boston, MA 02110-1301, USA.
+
   ;;; Code:
 
 #+END_SRC
@@ -191,9 +215,14 @@ Then ensure we're running an appropriate version of Emacs, or bail out early.
         debug-on-quit nil
         debug-on-signal nil)
 
+  (defvar at-symbol "@")
+
   (let ((minver "29.1"))
     (when (version< emacs-version minver)
       (error "Emacs is too old.")))
+
+  (setq user-full-name "Howard Logsdon"
+        user-mail-address (concat "uxp" at-symbol "hplogsdon.com"))
 
   ;; Add the `lisp' directory
   (add-to-list 'load-path (expand-file-name "lisp" user-emacs-directory))
@@ -208,8 +237,7 @@ Then ensure we're running an appropriate version of Emacs, or bail out early.
 This measures startup and require times. Should be included as early as possible
 
 #+BEGIN_SRC emacs-lisp :tangle init.el :comments link
-  ;;; --- Measure startup time and require times
-
+  ;; Measure startup time and require times
   (defun sanityinc/time-subtract-millis (b a)
     "Subtract time A from time B in milliseconds."
     (* 1000.0 (float-time (time-subtract b a))))
@@ -294,21 +322,33 @@ This measures startup and require times. Should be included as early as possible
 
 A number of helpful defines
 
-#+BEGIN_SRC emacs-lisp :tangle init.el :comments link
-  ;;; --- Helpful defines and functions
-  (setq *spell-check-support-enabled* nil) ;; Enable with 't if you prefer
+***** Disable Spell Check
 
+#+BEGIN_SRC emacs-lisp :tangle init.el :comments link
+  (setq *spell-check-support-enabled* nil) ;; Enable with 't if you prefer
+#+END_SRC
+
+***** System Type helpers
+
+#+BEGIN_SRC emacs-lisp :tangle init.el :comments link
   (setq *is-macos* (eq system-type 'darwin))
   (setq *is-windows* (memq system-type '(windows-nt ms-dos cygwin)))
   (setq *is-linux* (eq system-type 'gnu/linux))
+#+END_SRC
 
+***** Garbage Collection Threshold
+
+#+BEGIN_SRC emacs-lisp :tangle init.el :comments link
   ;; Adjust garbage collection threshold for early startup (see gcmh below)
   (setq gc-cons-threshold (* 128 1024 1024))
+#+END_SRC
 
+***** Process Performance Tuning
+
+#+BEGIN_SRC emacs-lisp :tangle init.el :comments link
   ;; Process performance tuning
   (setq read-process-output-max (* 4 1024 1024))
   (setq process-adaptive-read-buffering nil)
-
 #+END_SRC
 
 **** Bootstrapping
@@ -316,7 +356,6 @@ A number of helpful defines
 We call this bootstrapping, but we're already a ways into this thing. Here we attempt to load pre-package paths and utilities
 
 #+BEGIN_SRC emacs-lisp :tangle init.el :comments link
-  ;;; --- Bootstrap stuff.
   ;; Set user custom file
   (setq custom-file (locate-user-emacs-file "custom.el"))
 #+END_SRC
@@ -326,6 +365,7 @@ We call this bootstrapping, but we're already a ways into this thing. Here we at
 This is where we bootstrap our package management. This was simply configuring `package.el', but we've moved to using
 `straight.el', since Emacs was having issues with the standard ELPA/MELPA packages
 
+***** straight.el Config
 
 #+BEGIN_SRC emacs-lisp :tangle init.el :comments link
   ;; Set straight.el default config before bootstrapping
@@ -343,10 +383,12 @@ This is where we bootstrap our package management. This was simply configuring `
           uniquify
           vc
           which-function-mode))
+#+END_SRC
 
+***** package.el Config
 
+#+BEGIN_SRC emacs-lisp :tangle init.el :comments link
   ;; The following is probably unused, but I'm not deleting it yet.
-  ;;; Standard package repositories
   (setq package-user-dir (expand-file-name (format "elpa-%s.%s" emacs-major-version emacs-minor-version)
                                            user-emacs-directory)
         package-archives '(("melpa-stable" . "https://stable.melpa.org/packages/")
@@ -393,11 +435,8 @@ before they'll have any effect, so we load these types of things now.
 
 
 #+BEGIN_SRC emacs-lisp :tangle init.el :comments link
-  ;;; --- Package Helpers
-
   (use-package diminish
     :ensure t)
-
 
 #+END_SRC
 
@@ -408,8 +447,6 @@ This is where I put random functions that help with random tasks.
 ***** Init file helpers
 
 #+BEGIN_SRC emacs-lisp :tangle init.el :comments link
-  ;;; --- Emacs-Lisp helper functions and commands
-
   (defun hpl/reload-user-init-file ()
     "Reload the init file."
     (interactive)
@@ -619,11 +656,6 @@ Prepares the "site-lisp" directory for later use. Think `site-packages` in Pytho
 We'll still need to `require' it, but we've recursively added anything checked out into that directory into our load path, so it shouldn't complain much.
 
 #+BEGIN_SRC emacs-lisp :tangle init.el :comments link
-  ;;; --- Support elisp manually installed in the site-lisp dir
-
-  ;; This must come before `elpa', as it may provide package.el
-  ;; or equivalent functions
-
   ;; Set load path
   (require 'cl-lib)
 
@@ -676,8 +708,6 @@ We'll still need to `require' it, but we've recursively added anything checked o
 Exec path from shell ensures environment variables inside Emacs look the same as in the user's shell. Specifically on macOS, an Emacs instance may be launched as a GUI app and not inherit the appropriate default terminal environment variables. Similarly, if launched from `launchd` or `systemd` as a daemon, it will launch with some basic default encironment variables.
 
 #+BEGIN_SRC emacs-lisp :tangle init.el :comments link
-  ;;; --- Setup exec-path to help Emacs find packages
-
   (when (or (memq window-system '(mac ns x pgtk))
             (unless (memq system-type '(ms-dos windows-nt))
               (daemonp)))
@@ -702,8 +732,6 @@ If Emacs is used on a system with high memory pressure, and Emacs is exhibiting 
 Turning this off for now. Having loading issues with it.
 
 #+BEGIN_SRC emacs-lisp :tangle init.el :comments link
-  ;;; --- Performance tuning
-
   ;; General performance tuning with the Garbage Collector Magic Hack
   (use-package gcmh
     :ensure t
@@ -730,7 +758,6 @@ Turning this off for now. Having loading issues with it.
 Creates a couple conditional window-system or tty/console hooks that execute after a new frame is created.
 
 #+BEGIN_SRC emacs-lisp :tangle init.el :comments link
-  ;;; --- Provide specific hooks for GUI/TTY frame creation
   (defvar after-make-console-frame-hooks '()
     "Hooks to run after creating a new TTY frame")
 
@@ -762,8 +789,6 @@ Creates a couple conditional window-system or tty/console hooks that execute aft
 Helps integrate Emacs with xterm and similar Term emulators
 
 #+BEGIN_SRC emacs-lisp :tangle init.el :comments link
-  ;;; --- Integrate with terminals such as xterm
-
   (global-set-key [mouse-4] (lambda () (interactive) (scroll-down 1)))
   (global-set-key [mouse-5] (lambda () (interactive) (scroll-up 1)))
 
@@ -788,7 +813,6 @@ Font family that we'll use.
 
 
 #+BEGIN_SRC emacs-lisp :tangle init.el :comments link
-  ;;; --- Fonts
   (if *is-macos*
       (progn
         (set-face-attribute 'default nil :font "JetBrainsMonoNL Nerd Font")
@@ -852,8 +876,6 @@ This sets up emoji rendering. Required installation of the [[github.com/googlefo
 ***** Icons
 
 #+BEGIN_SRC emacs-lisp :tangle init.el :comments link
-  ;;; --- Icons
-
   (use-package nerd-icons)
 
   (use-package nerd-icons-completion
@@ -895,8 +917,6 @@ This sets up emoji rendering. Required installation of the [[github.com/googlefo
 **** UI Elements
 
 #+BEGIN_SRC emacs-lisp :tangle init.el :comments link
-  ;;; --- Line Numbers
-
   (setq column-number-mode t)
   (setq line-number-mode t)
   (global-display-line-numbers-mode t)
@@ -920,8 +940,6 @@ This sets up emoji rendering. Required installation of the [[github.com/googlefo
 **** Themes
 
 #+BEGIN_SRC emacs-lisp :tangle init.el :comments link
-  ;;; --- Theming
-
   (use-package monokai-pro-theme
     :ensure t
     :init
@@ -943,8 +961,6 @@ The following two items are extra syntax highlighting packages that specifically
 **** GUI Frames
 
 #+BEGIN_SRC emacs-lisp :tangle init.el :comments link
-  ;;; --- Non-TTY frames behavior
-
   ;; Stop C-z frame
   (defun sanityinc/maybe-suspend-frame ()
     (interactive)
@@ -990,8 +1006,6 @@ The following two items are extra syntax highlighting packages that specifically
 Tries to set some keybindings so emacs feels more native under macOS/OSX
 
 #+BEGIN_SRC emacs-lisp :tangle init.el :comments link
-  ;;; Configuration specific to MacOS
-
   (when *is-macos*
     (setq mac-right-command-modifier 'super)
     (setq mac-command-modifier 'super)
@@ -1025,8 +1039,6 @@ Tries to set some keybindings so emacs feels more native under macOS/OSX
 Keybinds and other movement helpers
 
 #+BEGIN_SRC emacs-lisp :tangle init.el :comments link
-  ;;; General keybinds-
-
   (defun hplogsdon/kill-this-buffer ()
     (interactive)
     (catch 'quit
@@ -1131,8 +1143,6 @@ Searching, Finding, Buffer management
 Dired helps me using this beautiful files I love so dearly.
 
 #+BEGIN_SRC emacs-lisp :tangle init.el :comments link
-  ;;; --- Dired customization
-
   (use-package dired
     :ensure nil
     :defer t
@@ -1163,8 +1173,6 @@ Dired helps me using this beautiful files I love so dearly.
 Builtin searching for buffers
 
 #+BEGIN_SRC emacs-lisp :tangle init.el :comments link
-  ;;; --- isearch settings
-
   (defun sanityinc/isearch-occur ()
     "Invoke `consult-line' from isearch."
     (interactive)
@@ -1179,7 +1187,7 @@ Builtin searching for buffers
   ;; Search back/forth for the symbol at point
   ;; see https://www.emacswiki.org/emacs/SearchAtPoint
   (defun isearch-yank-symbol ()
-    "*Put symbol at current point into search string."
+    "Put symbol at current point into search string."
     (interactive)
     (let ((sym (thing-at-point 'symbol)))
       (if sym
@@ -1229,8 +1237,6 @@ Builtin searching for buffers
 Find and search files. Attepts to use =mdfind= on macOS, as well as =ag= and =rg= if they are available
 
 #+BEGIN_SRC emacs-lisp :tangle init.el :comments link
-  ;;; --- Settings for grep and grep-like tools
-
   (setq-default grep-highlight-matched t
                 grep-scroll-output t)
 
@@ -1261,8 +1267,6 @@ Find and search files. Attepts to use =mdfind= on macOS, as well as =ag= and =rg
 Uniquify tries to rename buffers for files with identical names.
 
 #+BEGIN_SRC emacs-lisp :tangle init.el :comments link
-  ;;; --- Configure uniquification of buffer name
-
   (use-package uniquify
     :config
     (setq uniquify-buffer-name-style 'reverse
@@ -1277,8 +1281,6 @@ Uniquify tries to rename buffers for files with identical names.
 Style and Syntax Checking. =flymake= does a good job with this, and it's builtin. Further down, eglot builds on this as well for LSP server integration.
 
 #+BEGIN_SRC emacs-lisp :tangle init.el :comments link
-  ;;; --- Configure flymake global behavior
-
   (use-package flymake
     :ensure nil
     :hook (prog-mode . flymake-mode)
@@ -1296,8 +1298,6 @@ Style and Syntax Checking. =flymake= does a good job with this, and it's builtin
 Jump to definitions and references
 
 #+BEGIN_SRC emacs-lisp :tangle init.el :comments link
-  ;;; --- Cross Reference (xref) configuration
-
   (use-package xref
     :straight t
     :defer t
@@ -1322,8 +1322,6 @@ We'll need a Language Server Protocol Client to use different LSP servers accord
 languages that we'd like to use.
 
 #+BEGIN_SRC emacs-lisp :tangle init.el :comments link
-  ;;; --- LSP Support
-
   (use-package lsp-mode
     :after (:all xref)
     :commands (lsp lsp-deferred)
@@ -1385,8 +1383,6 @@ We could also use =consult-lsp= here if we were using it instead of ibuffer.
 Recent File tracking buffer
 
 #+BEGIN_SRC emacs-lisp :tangle init.el :comments link
-  ;;; --- Settings for tracking recent files
-
   (use-package recentf
     :defer t
     :init (recentf-mode)
@@ -1408,8 +1404,6 @@ Recent File tracking buffer
 TODO load vertico/embark/consult/marginalia ?
 
 #+BEGIN_SRC emacs-lisp :tangle init.el :comments link
-  ;;;  ---
-
   (defun switch-to-minibuffer ()
     "Switch to minibuffer."
     (interactive)
@@ -1461,8 +1455,6 @@ TODO Add `emmet-mode` here ?
 
 
 #+BEGIN_SRC emacs-lisp :tangle init.el :comments link
-  ;;; --- Settings for hippie-expand
-
   (use-package hippie-exp
     :ensure nil
     :bind ([remap dabbrev-expand] . hippie-expand)
@@ -1516,9 +1508,6 @@ see: [https://github.com/e-denny/.emacs.d/blob/a0a46fa/lisp/init-corfu.el#L93]
 
 
 #+BEGIN_SRC emacs-lisp :tangle init.el :comments link
-  ;;; --- Interactive completion in buffers
-
-  ;; Corfu is responsible for interactive completion
   (use-package corfu
     :init
     (global-corfu-mode)
@@ -1541,9 +1530,6 @@ https://github.com/e-denny/.emacs.d/blob/a0a46fa063f5cac0ff5cd79ce897513bc9a1146
 
 
 #+BEGIN_SRC emacs-lisp :tangle init.el :comments link
-  ;;; --- Cape
-
-  ;; Adds more completion source backends for Corfu
   (use-package cape
     :bind
     (("C-c p" . cape-prefix-map)
@@ -1563,7 +1549,6 @@ https://github.com/e-denny/.emacs.d/blob/a0a46fa063f5cac0ff5cd79ce897513bc9a1146
     ;; Use TAB for completions first, then indent
     (tab-always-indent 'complete))
 
-
 #+END_SRC
 
 
@@ -1582,8 +1567,6 @@ See: https://github.com/loispostula/.emacs.d/blob/c10ee86/config.org#window
 
 
 #+BEGIN_SRC emacs-lisp :tangle init.el :comments link
-  ;;; --- Working with windows within frames
-
   ;; Show window number when switching
   (use-package switch-window
     :ensure t
@@ -1617,8 +1600,6 @@ See: https://github.com/loispostula/.emacs.d/blob/c10ee86/config.org#window
      ("C-S-j" . #'buf-move-down)
      ("C-S-k" . #'buf-move-up)
      ("C-S-l" . #'buf-move-right)))
-
-
 #+END_SRC
 
 ***** DONE sessions
@@ -1627,8 +1608,6 @@ CLOSED: [2025-09-18 Thu 15:28]
 Saves a list of files to a cache file in the emacs dir, and can restore them later
 
 #+BEGIN_SRC emacs-lisp :tangle init.el :comments link
-  ;;; --- Save and restore editor sessions between restarts
-
   ;; save a list of open files in ~/.emacs.d/.emacs.desktop
   (setq desktop-path (list user-emacs-directory)
         desktop-auto-save-timeout 600)
@@ -1678,7 +1657,6 @@ Saves a list of files to a cache file in the emacs dir, and can restore them lat
             (regexp-search-ring   . 20)
             (search-ring          . 20))))
 
-
 #+END_SRC
 
 
@@ -1690,8 +1668,6 @@ CLOSED: [2025-09-18 Thu 14:44]
 Allows for multiple major modes to be active in different regions of a single buffer. This helps show code snippets in Markdown and the like.
 
 #+BEGIN_SRC emacs-lisp :tangle init.el
-  ;;; --- Multiple Major Modes support
-
   (use-package mmm-mode
     :ensure t
     :defer t
@@ -1727,24 +1703,6 @@ Allows for multiple major modes to be active in different regions of a single bu
 
 #+END_SRC
 
-**** editing-utils
-
-#+BEGIN_SRC emacs-lisp :tangle init.el :comments link
-  ;;; --- Day-to-Day editing helpers
-
-  ;; Advises kill-region "C-w" so that if no region is selected, it kills/copies the current line.
-  (advice-add 'kill-region :before
-              (lambda (&rest args)
-                "When called interactively with no active region, kill a single line instead."
-                (when (called-interactively-p 'interactive)
-                  (unless mark-active
-                    (setq args (list (line-beginning-position)
-                                     (line-beginning-position 2)))))))
-
-
-
-#+END_SRC
-
 **** DONE whitespace
 CLOSED: [2025-09-18 Thu 14:44]
 
@@ -1763,9 +1721,6 @@ Further, whitespace can also be cleaned up automatically with
 | global | C-c w i | whitespace-cleanup      |
 
 #+BEGIN_SRC emacs-lisp :tangle init.el :comments link
-  ;;; --- Special handling for whitespace
-
-  ;; Show whitespace issues
   (use-package whitespace
     :diminish (global-whitespace-mode
                whitespace-mode
@@ -1800,7 +1755,6 @@ Further, whitespace can also be cleaned up automatically with
 
   (global-set-key [remap just-one-space] 'cycle-spacing)
 
-
 #+END_SRC
 
 
@@ -1813,11 +1767,8 @@ Non-specific Version Control support. Diff-hl Highlights diff files, which all s
 
 
 #+BEGIN_SRC emacs-lisp :tangle init.el :comments link
-  ;;; --- Version control support
-
   ;; program-specific version control packages are configured separately.
   ;; see `git', for example
-
   (use-package diff-hl
     :ensure t
     :after (dired)
@@ -1889,8 +1840,6 @@ Non-specific Version Control support. Diff-hl Highlights diff files, which all s
 CLOSED: [2025-09-18 Thu 15:29]
 
 #+BEGIN_SRC emacs-lisp :tangle init.el :comments link
-  ;;; --- Git SCM Support
-
   (use-package git-gutter
     :ensure t
     :defer t
@@ -1980,8 +1929,6 @@ CLOSED: [2025-09-18 Thu 15:29]
 **** github
 
 #+BEGIN_SRC emacs-lisp :tangle init.el :comments link
-  ;;; --- Github integration
-
   ;; yagist
   ;; (use-package yagist)
 
@@ -2000,8 +1947,6 @@ CLOSED: [2025-09-18 Thu 15:29]
 **** gitlab
 
 #+BEGIN_SRC emacs-lisp :tangle init.el :comments link
-  ;;; --- Gitlab Integration
-
 
 #+END_SRC
 
@@ -2015,8 +1960,6 @@ CLOSED: [2025-09-18 Thu 15:29]
 TODO move to =consult-project-buffer= ? ibuffer is builtin, and maybe we should be think about using more builtin packages
 
 #+BEGIN_SRC emacs-lisp :tangle init.el :comments link
-  ;;; --- iBuffer settings
-
   (use-package ibuffer
     :ensure nil
     :bind (("C-x C-b" . ibuffer))
@@ -2088,7 +2031,6 @@ exists as well).
 #+END_QUOTE
 
 #+BEGIN_SRC emacs-lisp :tangle init.el :comments link
-  ;;; --- Projectile Project configuration
   (use-package projectile
     :ensure projectile
     :diminish projectile-mode
@@ -2172,8 +2114,6 @@ CLOSED: [2025-09-17 Wed 13:51]
 Org Mode : Organizational tool in Emacs for note-taking, TODO lists, project planning, and authoring documents in a plain-text format. This largely sets up some defaults including =org-agenda= and =org-capture=
 
 #+BEGIN_SRC emacs-lisp :tangle init.el :comments link
-  ;;; --- Org Mode Configuration
-
   (use-package org
     :pin "orgmode"
     :mode ("\\.org\\'" . org-mode)
@@ -2264,8 +2204,6 @@ To manage XML files, we use =nxml-mode= package built in to Emacs with LemMinX L
 To use it, we need to ensure the LSP mode is installed.
 
 #+BEGIN_SRC emacs-lisp :tangle init.el :comments link
-  ;;; --- XML
-
   (use-package nxml-mode
     :straight nil ;; builtin
     :hook (nxml-mode . lsp-deferred)
@@ -2362,8 +2300,6 @@ Paredit mode essentially orces you to edit on sexps, rather than text. It's hard
 - https://github.com/mpenet/emax/blob/9c7a37f/init.el#L415
 
 #+BEGIN_SRC emacs-lisp :tangle init.el :comments link
-  ;;; --- Paredit mode
-
   (use-package paredit
     :ensure t
     :diminish (paredit-mode))
@@ -2380,8 +2316,6 @@ Paredit mode essentially orces you to edit on sexps, rather than text. It's hard
 
 
 #+BEGIN_SRC emacs-lisp :tangle init.el :comments link
-    ;;; --- Emacs lisp settings, and common config for other lisps
-
   (defun hplogsdon/eval-last-sexp-or-region (prefix)
     "Eval region from BEG to END if active, otherwise the last sexp."
     (interactive "P")
@@ -2460,7 +2394,6 @@ Paredit mode essentially orces you to edit on sexps, rather than text. It's hard
 ****** Clojure Mode
 
 #+BEGIN_SRC emacs-lisp :tangle init.el :comments link
-  ;;; --- Clojure lanaguage
   (use-package clojure-mode
     :mode (("\\.boot$"  . clojure-mode)
            ("\\.clj$"   . clojure-mode)
@@ -2513,13 +2446,13 @@ Paredit mode essentially orces you to edit on sexps, rather than text. It's hard
                 ("C-c u" . hpl/cider-user-ns)
                 :map cider-mode-map
                 ("C-c u" . hpl/cider-user-ns))
-    
+
     :hook
     (;; Enable paredit in the cider REPL
      ;;(cider-mode . paredit-mode)
      ;; Provides minibuffer docs when writing to the REPL
      (cider-mode . cider-turn-on-eldoc-mode))
-    
+
     :config
     (setq nrepl-hide-special-buffers t
           nrepl-popup-stacktraces-in-repl t
@@ -2536,7 +2469,7 @@ Paredit mode essentially orces you to edit on sexps, rather than text. It's hard
           cider-auto-select-error-buffer nil
           ;; wrap when navigating history
           cider-repl-wrap-history t
-          
+
           cider-repl-use-pretty-printing t
           cider-cljs-lein-repl "(do (use 'figwheel-sidecar.repl-api) (start-figwheel!) (cljs-repl))")
 
@@ -2588,7 +2521,6 @@ Silly things that I find make a more enjoyable experience
 ***** which-key
 
 #+BEGIN_SRC emacs-lisp :tangle init.el :comments link
-  ;;; --- Which Key
   (use-package which-key
     :ensure t
     :diminish ""
@@ -2597,7 +2529,7 @@ Silly things that I find make a more enjoyable experience
 
   (use-package which-key-posframe
     :config
-    (set-face-attribute 'which-key-posframe nil :background "wheat1")
+    (set-face-attribute 'which-key-posframe nil :background "dark gray")
     :custom
     (which-key-posframe-mode t)
     (which-key-posframe-poshandler 'posframe-poshandler-frame-bottom-left-corner))

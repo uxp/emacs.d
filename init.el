@@ -1,12 +1,36 @@
 ;;; init.el --- Local Initialization File -*- lexical-binding: t -*-
+;;
+;; Copyright (c) 2016 - 2025 Howard Logsdon
+;;
+;; Author: Howard Logsdon <uxp@hplogsdon.com>
+;; URL: https://github.com/uxp/emacs.d
+;; Keywords: shitshow
+
+;; This file is not part of GNU Emacs.
+
 ;;; Commentary:
-;;;   This config targets Emacs 30, and is automatically generated via
-;;;   Org-Mode Tangled file README.org
-;;;
-;;;   Written by hplogsdon (https://gitlab.com/hplogdon/dotfiles)
-;;;
-;;;   Do not edit this by hand.
-;;;
+
+;;   This config targets Emacs 30, and is automatically generated via
+;;   Org-Mode Tangled file README.org
+;;   Do not edit this by hand.
+
+;;; License:
+
+;; This program is free software; you can redistribute it and/or
+;; modify it under the terms of the GNU General Public License
+;; as published by the Free Software Foundation; either version 3
+;; of the License, or (at your option) any later version.
+;;
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+;;
+;; You should have received a copy of the GNU General Public License
+;; along with GNU Emacs; see the file COPYING.  If not, write to the
+;; Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+;; Boston, MA 02110-1301, USA.
+
 ;;; Code:
 
 ;; [[file:README.org::*Header and Guard Statements][Header and Guard Statements:2]]
@@ -15,17 +39,21 @@
       debug-on-quit nil
       debug-on-signal nil)
 
+(defvar at-symbol "@")
+
 (let ((minver "29.1"))
   (when (version< emacs-version minver)
     (error "Emacs is too old.")))
+
+(setq user-full-name "Howard Logsdon"
+      user-mail-address (concat "uxp" at-symbol "hplogsdon.com"))
 
 ;; Add the `lisp' directory
 (add-to-list 'load-path (expand-file-name "lisp" user-emacs-directory))
 ;; Header and Guard Statements:2 ends here
 
 ;; [[file:README.org::*Benchmarking][Benchmarking:1]]
-;;; --- Measure startup time and require times
-
+;; Measure startup time and require times
 (defun sanityinc/time-subtract-millis (b a)
   "Subtract time A from time B in milliseconds."
   (* 1000.0 (float-time (time-subtract b a))))
@@ -105,29 +133,33 @@ LOAD-DURATION is the time taken in milliseconds to load FEATURE.")
 (add-hook 'after-init-hook 'sanityinc/show-init-time)
 ;; Benchmarking:1 ends here
 
-;; [[file:README.org::*Defines][Defines:1]]
-;;; --- Helpful defines and functions
+;; [[file:README.org::*Disable Spell Check][Disable Spell Check:1]]
 (setq *spell-check-support-enabled* nil) ;; Enable with 't if you prefer
+;; Disable Spell Check:1 ends here
 
+;; [[file:README.org::*System Type helpers][System Type helpers:1]]
 (setq *is-macos* (eq system-type 'darwin))
 (setq *is-windows* (memq system-type '(windows-nt ms-dos cygwin)))
 (setq *is-linux* (eq system-type 'gnu/linux))
+;; System Type helpers:1 ends here
 
+;; [[file:README.org::*Garbage Collection Threshold][Garbage Collection Threshold:1]]
 ;; Adjust garbage collection threshold for early startup (see gcmh below)
 (setq gc-cons-threshold (* 128 1024 1024))
+;; Garbage Collection Threshold:1 ends here
 
+;; [[file:README.org::*Process Performance Tuning][Process Performance Tuning:1]]
 ;; Process performance tuning
 (setq read-process-output-max (* 4 1024 1024))
 (setq process-adaptive-read-buffering nil)
-;; Defines:1 ends here
+;; Process Performance Tuning:1 ends here
 
 ;; [[file:README.org::*Bootstrapping][Bootstrapping:1]]
-;;; --- Bootstrap stuff.
 ;; Set user custom file
 (setq custom-file (locate-user-emacs-file "custom.el"))
 ;; Bootstrapping:1 ends here
 
-;; [[file:README.org::*Package Management][Package Management:1]]
+;; [[file:README.org::*straight.el Config][straight.el Config:1]]
 ;; Set straight.el default config before bootstrapping
 (setq straight-use-package-by-default t                 ; use-package defaults to straight.el
       straight-recipes-gnu-elpa-use-mirror t            ; use straight's mirror of elpa
@@ -143,10 +175,10 @@ LOAD-DURATION is the time taken in milliseconds to load FEATURE.")
         uniquify
         vc
         which-function-mode))
+;; straight.el Config:1 ends here
 
-
+;; [[file:README.org::*package.el Config][package.el Config:1]]
 ;; The following is probably unused, but I'm not deleting it yet.
-;;; Standard package repositories
 (setq package-user-dir (expand-file-name (format "elpa-%s.%s" emacs-major-version emacs-minor-version)
                                          user-emacs-directory)
       package-archives '(("melpa-stable" . "https://stable.melpa.org/packages/")
@@ -182,18 +214,14 @@ LOAD-DURATION is the time taken in milliseconds to load FEATURE.")
 (straight-use-package 'use-package)
 
 (require 'cl-lib)
-;; Package Management:1 ends here
+;; package.el Config:1 ends here
 
 ;; [[file:README.org::*Package helpers][Package helpers:1]]
-;;; --- Package Helpers
-
 (use-package diminish
   :ensure t)
 ;; Package helpers:1 ends here
 
 ;; [[file:README.org::*Init file helpers][Init file helpers:1]]
-;;; --- Emacs-Lisp helper functions and commands
-
 (defun hpl/reload-user-init-file ()
   "Reload the init file."
   (interactive)
@@ -377,11 +405,6 @@ region-end are used. Adds the duplicated text to the kill ring."
 ;; Whitespace:1 ends here
 
 ;; [[file:README.org::*Lisp directories (aka, `vendor')][Lisp directories (aka, `vendor'):1]]
-;;; --- Support elisp manually installed in the site-lisp dir
-
-;; This must come before `elpa', as it may provide package.el
-;; or equivalent functions
-
 ;; Set load path
 (require 'cl-lib)
 
@@ -429,8 +452,6 @@ under ~/.emacs.d/site-lisp/NAME"
 ;; Lisp directories (aka, `vendor'):1 ends here
 
 ;; [[file:README.org::*Exec Path][Exec Path:1]]
-;;; --- Setup exec-path to help Emacs find packages
-
 (when (or (memq window-system '(mac ns x pgtk))
           (unless (memq system-type '(ms-dos windows-nt))
             (daemonp)))
@@ -444,8 +465,6 @@ under ~/.emacs.d/site-lisp/NAME"
 ;; Exec Path:1 ends here
 
 ;; [[file:README.org::*Performance tuning][Performance tuning:1]]
-;;; --- Performance tuning
-
 ;; General performance tuning with the Garbage Collector Magic Hack
 (use-package gcmh
   :ensure t
@@ -462,7 +481,6 @@ under ~/.emacs.d/site-lisp/NAME"
 ;; Performance tuning:1 ends here
 
 ;; [[file:README.org::*Frame Hooks][Frame Hooks:1]]
-;;; --- Provide specific hooks for GUI/TTY frame creation
 (defvar after-make-console-frame-hooks '()
   "Hooks to run after creating a new TTY frame")
 
@@ -489,8 +507,6 @@ Selectively runs either `after-make-console-frame-hooks' or
 ;; Frame Hooks:1 ends here
 
 ;; [[file:README.org::*XTerm][XTerm:1]]
-;;; --- Integrate with terminals such as xterm
-
 (global-set-key [mouse-4] (lambda () (interactive) (scroll-down 1)))
 (global-set-key [mouse-5] (lambda () (interactive) (scroll-up 1)))
 
@@ -504,8 +520,7 @@ Selectively runs either `after-make-console-frame-hooks' or
 (add-hook 'after-make-console-frame-hooks 'sanityinc/console-frame-setup)
 ;; XTerm:1 ends here
 
-;; [[file:README.org::*FontMs][FontMs:1]]
-;;; --- Fonts
+;; [[file:README.org::*Fonts][Fonts:1]]
 (if *is-macos*
     (progn
       (set-face-attribute 'default nil :font "JetBrainsMonoNL Nerd Font")
@@ -552,8 +567,6 @@ Selectively runs either `after-make-console-frame-hooks' or
 ;; Emoji:1 ends here
 
 ;; [[file:README.org::*Icons][Icons:1]]
-;;; --- Icons
-
 (use-package nerd-icons)
 
 (use-package nerd-icons-completion
@@ -592,8 +605,6 @@ Selectively runs either `after-make-console-frame-hooks' or
 ;; Icons:1 ends here
 
 ;; [[file:README.org::*UI Elements][UI Elements:1]]
-;;; --- Line Numbers
-
 (setq column-number-mode t)
 (setq line-number-mode t)
 (global-display-line-numbers-mode t)
@@ -614,8 +625,6 @@ Selectively runs either `after-make-console-frame-hooks' or
 ;; UI Elements:1 ends here
 
 ;; [[file:README.org::*Themes][Themes:1]]
-;;; --- Theming
-
 (use-package monokai-pro-theme
   :ensure t
   :init
@@ -631,8 +640,6 @@ Selectively runs either `after-make-console-frame-hooks' or
 ;; Themes:2 ends here
 
 ;; [[file:README.org::*GUI Frames][GUI Frames:1]]
-;;; --- Non-TTY frames behavior
-
 ;; Stop C-z frame
 (defun sanityinc/maybe-suspend-frame ()
   (interactive)
@@ -673,8 +680,6 @@ Selectively runs either `after-make-console-frame-hooks' or
 ;; GUI Frames:1 ends here
 
 ;; [[file:README.org::*macOS Keys][macOS Keys:1]]
-;;; Configuration specific to MacOS
-
 (when *is-macos*
   (setq mac-right-command-modifier 'super)
   (setq mac-command-modifier 'super)
@@ -703,8 +708,6 @@ Selectively runs either `after-make-console-frame-hooks' or
 ;; macOS Keys:1 ends here
 
 ;; [[file:README.org::*General keys][General keys:1]]
-;;; General keybinds-
-
 (defun hplogsdon/kill-this-buffer ()
   (interactive)
   (catch 'quit
@@ -772,8 +775,6 @@ Selectively runs either `after-make-console-frame-hooks' or
 ;; File Management:1 ends here
 
 ;; [[file:README.org::*dired][dired:1]]
-;;; --- Dired customization
-
 (use-package dired
   :ensure nil
   :defer t
@@ -798,8 +799,6 @@ Selectively runs either `after-make-console-frame-hooks' or
 ;; dired:1 ends here
 
 ;; [[file:README.org::*isearch][isearch:1]]
-;;; --- isearch settings
-
 (defun sanityinc/isearch-occur ()
   "Invoke `consult-line' from isearch."
   (interactive)
@@ -814,7 +813,7 @@ Selectively runs either `after-make-console-frame-hooks' or
 ;; Search back/forth for the symbol at point
 ;; see https://www.emacswiki.org/emacs/SearchAtPoint
 (defun isearch-yank-symbol ()
-  "*Put symbol at current point into search string."
+  "Put symbol at current point into search string."
   (interactive)
   (let ((sym (thing-at-point 'symbol)))
     (if sym
@@ -859,8 +858,6 @@ This is useful when followed by an immediate kill."
 ;; isearch:1 ends here
 
 ;; [[file:README.org::*grep][grep:1]]
-;;; --- Settings for grep and grep-like tools
-
 (setq-default grep-highlight-matched t
               grep-scroll-output t)
 
@@ -886,8 +883,6 @@ This is useful when followed by an immediate kill."
 ;; grep:1 ends here
 
 ;; [[file:README.org::*uniquify][uniquify:1]]
-;;; --- Configure uniquification of buffer name
-
 (use-package uniquify
   :config
   (setq uniquify-buffer-name-style 'reverse
@@ -897,8 +892,6 @@ This is useful when followed by an immediate kill."
 ;; uniquify:1 ends here
 
 ;; [[file:README.org::*flymake][flymake:1]]
-;;; --- Configure flymake global behavior
-
 (use-package flymake
   :ensure nil
   :hook (prog-mode . flymake-mode)
@@ -910,8 +903,6 @@ This is useful when followed by an immediate kill."
 ;; flymake:1 ends here
 
 ;; [[file:README.org::*xref][xref:1]]
-;;; --- Cross Reference (xref) configuration
-
 (use-package xref
   :straight t
   :defer t
@@ -925,8 +916,6 @@ This is useful when followed by an immediate kill."
 ;; xref:1 ends here
 
 ;; [[file:README.org::*Language Server Protocol][Language Server Protocol:1]]
-;;; --- LSP Support
-
 (use-package lsp-mode
   :after (:all xref)
   :commands (lsp lsp-deferred)
@@ -973,8 +962,6 @@ This is useful when followed by an immediate kill."
 ;; Language Server Protocol:3 ends here
 
 ;; [[file:README.org::*recentf][recentf:1]]
-;;; --- Settings for tracking recent files
-
 (use-package recentf
   :defer t
   :init (recentf-mode)
@@ -990,8 +977,6 @@ This is useful when followed by an immediate kill."
 ;; recentf:1 ends here
 
 ;; [[file:README.org::*minibuffer][minibuffer:1]]
-;;;  ---
-
 (defun switch-to-minibuffer ()
   "Switch to minibuffer."
   (interactive)
@@ -1016,8 +1001,6 @@ This is useful when followed by an immediate kill."
 ;; dabbrev:1 ends here
 
 ;; [[file:README.org::*hippie-expand][hippie-expand:1]]
-;;; --- Settings for hippie-expand
-
 (use-package hippie-exp
   :ensure nil
   :bind ([remap dabbrev-expand] . hippie-expand)
@@ -1060,9 +1043,6 @@ This is useful when followed by an immediate kill."
 ;; hippie-expand:1 ends here
 
 ;; [[file:README.org::*corfu][corfu:1]]
-;;; --- Interactive completion in buffers
-
-;; Corfu is responsible for interactive completion
 (use-package corfu
   :init
   (global-corfu-mode)
@@ -1076,9 +1056,6 @@ This is useful when followed by an immediate kill."
 ;; corfu:1 ends here
 
 ;; [[file:README.org::*Cape][Cape:1]]
-;;; --- Cape
-
-;; Adds more completion source backends for Corfu
 (use-package cape
   :bind
   (("C-c p" . cape-prefix-map)
@@ -1100,8 +1077,6 @@ This is useful when followed by an immediate kill."
 ;; Cape:1 ends here
 
 ;; [[file:README.org::*windows][windows:1]]
-;;; --- Working with windows within frames
-
 ;; Show window number when switching
 (use-package switch-window
   :ensure t
@@ -1138,8 +1113,6 @@ This is useful when followed by an immediate kill."
 ;; windows:1 ends here
 
 ;; [[file:README.org::*sessions][sessions:1]]
-;;; --- Save and restore editor sessions between restarts
-
 ;; save a list of open files in ~/.emacs.d/.emacs.desktop
 (setq desktop-path (list user-emacs-directory)
       desktop-auto-save-timeout 600)
@@ -1190,8 +1163,6 @@ This is useful when followed by an immediate kill."
           (search-ring          . 20))))
 ;; sessions:1 ends here
 
-;;; --- Multiple Major Modes support
-
 (use-package mmm-mode
   :ensure t
   :defer t
@@ -1225,23 +1196,7 @@ This is useful when followed by an immediate kill."
   ;;                              :end-not-begin t)))
   )
 
-;; [[file:README.org::*editing-utils][editing-utils:1]]
-;;; --- Day-to-Day editing helpers
-
-;; Advises kill-region "C-w" so that if no region is selected, it kills/copies the current line.
-(advice-add 'kill-region :before
-            (lambda (&rest args)
-              "When called interactively with no active region, kill a single line instead."
-              (when (called-interactively-p 'interactive)
-                (unless mark-active
-                  (setq args (list (line-beginning-position)
-                                   (line-beginning-position 2)))))))
-;; editing-utils:1 ends here
-
 ;; [[file:README.org::*whitespace][whitespace:1]]
-;;; --- Special handling for whitespace
-
-;; Show whitespace issues
 (use-package whitespace
   :diminish (global-whitespace-mode
              whitespace-mode
@@ -1278,11 +1233,8 @@ This is useful when followed by an immediate kill."
 ;; whitespace:1 ends here
 
 ;; [[file:README.org::*Version Control][Version Control:1]]
-;;; --- Version control support
-
 ;; program-specific version control packages are configured separately.
 ;; see `git', for example
-
 (use-package diff-hl
   :ensure t
   :after (dired)
@@ -1350,8 +1302,6 @@ This is useful when followed by an immediate kill."
 ;; Version Control:1 ends here
 
 ;; [[file:README.org::*git][git:1]]
-;;; --- Git SCM Support
-
 (use-package git-gutter
   :ensure t
   :defer t
@@ -1437,8 +1387,6 @@ This is useful when followed by an immediate kill."
 ;; git:1 ends here
 
 ;; [[file:README.org::*github][github:1]]
-;;; --- Github integration
-
 ;; yagist
 ;; (use-package yagist)
 
@@ -1454,12 +1402,10 @@ This is useful when followed by an immediate kill."
 ;; github:1 ends here
 
 ;; [[file:README.org::*gitlab][gitlab:1]]
-;;; --- Gitlab Integration
+
 ;; gitlab:1 ends here
 
 ;; [[file:README.org::*ibuffer][ibuffer:1]]
-;;; --- iBuffer settings
-
 (use-package ibuffer
   :ensure nil
   :bind (("C-x C-b" . ibuffer))
@@ -1512,7 +1458,6 @@ This is useful when followed by an immediate kill."
 ;; ibuffer:1 ends here
 
 ;; [[file:README.org::*projectile][projectile:1]]
-;;; --- Projectile Project configuration
 (use-package projectile
   :ensure projectile
   :diminish projectile-mode
@@ -1566,8 +1511,6 @@ This is useful when followed by an immediate kill."
 ;; javascript:1 ends here
 
 ;; [[file:README.org::*orgmode][orgmode:1]]
-;;; --- Org Mode Configuration
-
 (use-package org
   :pin "orgmode"
   :mode ("\\.org\\'" . org-mode)
@@ -1643,8 +1586,6 @@ This is useful when followed by an immediate kill."
 ;; Java:1 ends here
 
 ;; [[file:README.org::*nxml][nxml:1]]
-;;; --- XML
-
 (use-package nxml-mode
   :straight nil ;; builtin
   :hook (nxml-mode . lsp-deferred)
@@ -1693,8 +1634,6 @@ This is useful when followed by an immediate kill."
 ;; Color Strings:1 ends here
 
 ;; [[file:README.org::*paredit][paredit:1]]
-;;; --- Paredit mode
-
 (use-package paredit
   :ensure t
   :diminish (paredit-mode))
@@ -1706,8 +1645,6 @@ This is useful when followed by an immediate kill."
 ;; paredit:1 ends here
 
 ;; [[file:README.org::*lisp][lisp:1]]
-;;; --- Emacs lisp settings, and common config for other lisps
-
 (defun hplogsdon/eval-last-sexp-or-region (prefix)
   "Eval region from BEG to END if active, otherwise the last sexp."
   (interactive "P")
@@ -1780,7 +1717,6 @@ This is useful when followed by an immediate kill."
 ;; lisp:1 ends here
 
 ;; [[file:README.org::*Clojure Mode][Clojure Mode:1]]
-;;; --- Clojure lanaguage
 (use-package clojure-mode
   :mode (("\\.boot$"  . clojure-mode)
          ("\\.clj$"   . clojure-mode)
@@ -1826,13 +1762,13 @@ This is useful when followed by an immediate kill."
               ("C-c u" . hpl/cider-user-ns)
               :map cider-mode-map
               ("C-c u" . hpl/cider-user-ns))
-  
+
   :hook
   (;; Enable paredit in the cider REPL
    ;;(cider-mode . paredit-mode)
    ;; Provides minibuffer docs when writing to the REPL
    (cider-mode . cider-turn-on-eldoc-mode))
-  
+
   :config
   (setq nrepl-hide-special-buffers t
         nrepl-popup-stacktraces-in-repl t
@@ -1849,7 +1785,7 @@ This is useful when followed by an immediate kill."
         cider-auto-select-error-buffer nil
         ;; wrap when navigating history
         cider-repl-wrap-history t
-        
+
         cider-repl-use-pretty-printing t
         cider-cljs-lein-repl "(do (use 'figwheel-sidecar.repl-api) (start-figwheel!) (cljs-repl))")
 
@@ -1891,7 +1827,6 @@ This is useful when followed by an immediate kill."
 ;; CIDER:1 ends here
 
 ;; [[file:README.org::*which-key][which-key:1]]
-;;; --- Which Key
 (use-package which-key
   :ensure t
   :diminish ""
@@ -1900,7 +1835,7 @@ This is useful when followed by an immediate kill."
 
 (use-package which-key-posframe
   :config
-  (set-face-attribute 'which-key-posframe nil :background "wheat1")
+  (set-face-attribute 'which-key-posframe nil :background "dark gray")
   :custom
   (which-key-posframe-mode t)
   (which-key-posframe-poshandler 'posframe-poshandler-frame-bottom-left-corner))
