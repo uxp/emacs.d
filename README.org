@@ -1082,10 +1082,16 @@ Unset common movement, which hopefully should start to force muscle memory to th
 | C-p     | previous-line |
 | C-n     | next-line     |
 | C-f     | forward-char  |
-| C-b     | back-char     |
+| C-b     | backward-char |
 | C-a     | home          |
 | C-e     | end           |
-
+| M-f     | forward-word  |
+| M-b     | backward-word |
+| C-M-f   | forward-sexp  |
+| C-M-b   | backward-sexp |
+| C-x ]   | forward-page  |
+| C-x [   | backward-page |
+| C-d     | delete-char   |
 
 #+BEGIN_SRC emacs-lisp :tangle init.el :comments link
   ;;  (global-unset-key [up])
@@ -1491,7 +1497,7 @@ TODO Add `emmet-mode` here ?
             ;; Try to complete the current line to an entire line in a different buffer.
             try-expand-line-all-buffers
             ;; Try to complete text using flyspell
-  					;try-flyspell
+            ;try-flyspell
             ;; Try to complete as an Emacs Lisp symbol, as many characters are unique.
             try-complete-lisp-symbol-partially
             ;; Try to complete word as an Emacs Lisp symbol.
@@ -1530,7 +1536,6 @@ see: [https://github.com/e-denny/.emacs.d/blob/a0a46fa/lisp/init-corfu.el#L93]
 ***** Cape
 
 Completion At Point Extensions (CAPE), used in conjunction with Corfu, Company, and dabbrev.
-
 
 https://github.com/e-denny/.emacs.d/blob/a0a46fa063f5cac0ff5cd79ce897513bc9a1146a/lisp/init-corfu.el#L73
 
@@ -1930,11 +1935,11 @@ CLOSED: [2025-09-18 Thu 15:29]
       (setq magit-auto-revert-mode nil)
       (setq magit-repository-directories '("~/Projects/"))
 
-  					;(defadvice magit-status (around magit-fullscreen activate)
-  					;  (unless (get-register :magit-fullscreen)
-  					;    (window-configuration-to-register :magit-fullscreen))
-  					;  ad-to-it
-  					;  (delete-other-windows))
+                                          ;(defadvice magit-status (around magit-fullscreen activate)
+                                          ;  (unless (get-register :magit-fullscreen)
+                                          ;    (window-configuration-to-register :magit-fullscreen))
+                                          ;  ad-to-it
+                                          ;  (delete-other-windows))
 
       (defun hpl/magit-kill-file-on-line ()
         ""
@@ -2175,7 +2180,7 @@ Org Mode : Organizational tool in Emacs for note-taking, TODO lists, project pla
     :defer t
     :bind (("C-c a" . org-agenda)
            ("C-c c" . org-capture)
-  					;("C-c j" . org-journal)
+                                          ;("C-c j" . org-journal)
            (:map org-mode-map
                  (("M-p" . outline-previous-visible-heading)
                   ("M-n" . outline-next-visible-heading)
@@ -2183,6 +2188,7 @@ Org Mode : Organizational tool in Emacs for note-taking, TODO lists, project pla
                   ("C-c ;" . nil))))
 
     :custom
+    (org-directory "~/OneDrive/org/")
     (org-return-follows-link t)
     (org-export-backends (quote (ascii html latex md odt)))
     (org-confirm-babel-evaluate 'nil)
@@ -2197,6 +2203,7 @@ Org Mode : Organizational tool in Emacs for note-taking, TODO lists, project pla
     (org-todo-keywords
      '((sequence "TODO(t)" "NEXT(n)" "|" "DONE(d)")
        (sequence "WAITING(w@/!)" "HOLD(h@/!)" "|" "CANCELLED(c@/!)")))
+    (org-ellipses "  ")
 
     :custom-face
     (org-agenda-current-time ((t (:foreground "spring green"))))
@@ -2206,14 +2213,19 @@ Org Mode : Organizational tool in Emacs for note-taking, TODO lists, project pla
                          (set-face-attribute 'org-level-2 nil :height 1.3)
                          (set-face-attribute 'org-level-3 nil :height 1.2)
                          (set-face-attribute 'org-level-4 nil :height 1.1)
-                         (set-face-attribute 'org-level-5 nil :height 1.1))))
+                         (set-face-attribute 'org-level-5 nil :height 1.1)))
+           (org-mode . (lambda ()
+                         (push '("TODO"      . ?▲) prettify-symbols-alist)
+                         (push '("NEXT"      . ?➜) prettify-symbols-alist)
+                         (push '("DONE"      . ?✓) prettify-symbols-alist)
+                         (push '("CANCELLED" . ?✘) prettify-symbols-alist))))
 
     :config
     (unless (version<= org-version "9.2")
       (require 'org-tempo))
 
-    (when (or (file-directory-p "~/org/agenda") (file-directory-p "~/org/journal"))
-      (setq org-agenda-files (list "~/org/agenda" "~/org/journal"))))
+    (when (or (file-directory-p "~/OneDrive/org/agenda.org") (file-directory-p "~/OneDrive/org/journal"))
+      (setq org-agenda-files (list "~/OneDrive/org/agenda.org" "~/OneDrive/org/journal"))))
 
   (use-package org-journal
     :bind (("C-c j n" . org-journal-new-entry)
@@ -2222,7 +2234,7 @@ Org Mode : Organizational tool in Emacs for note-taking, TODO lists, project pla
     :custom
     (org-journal-date-prefix "#+TITLE: ")
     (org-journal-file-format "%Y-%m-%d.org")
-    (org-journal-dir "~/org/journal")
+    (org-journal-dir "~/OneDrive/org/journal")
     (org-journal-date-format "%Y-%m-%d")
 
     :config
@@ -2456,14 +2468,14 @@ Paredit mode essentially orces you to edit on sexps, rather than text. It's hard
            ("\\.cljs$"  . clojurescript-mode)
            ("\\.edn$"   . clojure-mode)
            ("lein-env$" . clojure-mode))
-  	 :config
-  	 (use-package align-cljlet
-  	   :bind (:map clojure-mode-map
-                         ("C-! a a" . align-cljlet)
-                         :map clojurescript-mode-map
-                         ("C-! a a" . align-cljlet)
-                         :map clojurec-mode-map
-                         ("C-! a a" . align-cljlet))))
+    :config
+    (use-package align-cljlet
+      :bind (:map clojure-mode-map
+                  ("C-! a a" . align-cljlet)
+                  :map clojurescript-mode-map
+                  ("C-! a a" . align-cljlet)
+                  :map clojurec-mode-map
+                  ("C-! a a" . align-cljlet))))
 
 #+END_SRC
 
@@ -2506,7 +2518,7 @@ Paredit mode essentially orces you to edit on sexps, rather than text. It's hard
     (;; Enable paredit in the cider REPL
      ;;(cider-mode . paredit-mode)
      ;; Provides minibuffer docs when writing to the REPL
-     (cider-mode . cider-turn-on-eldoc-mode))  
+     (cider-mode . cider-turn-on-eldoc-mode))
     
     :config
     (setq nrepl-hide-special-buffers t
@@ -2547,7 +2559,7 @@ Paredit mode essentially orces you to edit on sexps, rather than text. It's hard
 
     (defun hpl/cider-user-ns ()
       (interactive)
-      (cider-repl-set-ns "user"))        
+      (cider-repl-set-ns "user"))
 
     (fset 'cider-eval-last-sexp-and-comment
           "\C-u\C-x\C-e\C-a\260 ;; \C-e")

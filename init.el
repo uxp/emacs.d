@@ -39,14 +39,14 @@ LOAD-DURATION is the time taken in milliseconds to load FEATURE.")
 (defun sanityinc/require-times-wrapper (orig feature &rest args)
   "Note in `sanityinc/require-times' the time taken to require each feature."
   (let* ((already-loaded (memq feature features))
-	 (require-start-time (and (not already-loaded) (current-time))))
+         (require-start-time (and (not already-loaded) (current-time))))
     (prog1
-	(apply orig feature args)
+        (apply orig feature args)
       (when (and (not already-loaded) (memq feature features))
-	(let ((time (sanityinc/time-subtract-millis (current-time) require-start-time)))
-	  (add-to-list 'sanityinc/require-times
-		       (list feature require-start-time time)
-		       t))))))
+        (let ((time (sanityinc/time-subtract-millis (current-time) require-start-time)))
+          (add-to-list 'sanityinc/require-times
+                       (list feature require-start-time time)
+                       t))))))
 
 
 (advice-add 'require :around 'sanityinc/require-times-wrapper)
@@ -54,9 +54,9 @@ LOAD-DURATION is the time taken in milliseconds to load FEATURE.")
 (define-derived-mode sanityinc/require-times-mode tabulated-list-mode "Require-Times"
   "Show times taken to `require' package"
   (setq tabulated-list-format
-	[("Start time (ms)" 20 sanityinc/require-times-sort-by-start-time-pred)
-	 ("Feature" 30)
-	 ("Time (ms)" 12 sanityinc/require-times-sort-by-load-time-pred)])
+        [("Start time (ms)" 20 sanityinc/require-times-sort-by-start-time-pred)
+         ("Feature" 30)
+         ("Time (ms)" 12 sanityinc/require-times-sort-by-load-time-pred)])
   (setq tabulated-list-sort-key (cons "Start time (ms)" nil))
   (setq tabulated-list-padding 2)
   (setq tabulated-list-entries #'sanityinc/require-times-tabulated-list-entries)
@@ -80,13 +80,13 @@ LOAD-DURATION is the time taken in milliseconds to load FEATURE.")
 (defun sanityinc/require-times-tabulated-list-entries ()
   "Show require times of all modules in a table format."
   (cl-loop for (feature start-time millis) in sanityinc/require-times
-	   with order = 0
-	   do (cl-incf order)
-	   collect (list order
-			 (vector
-			  (format "%.3f" (sanityinc/time-subtract-millis start-time before-init-time))
-			  (symbol-name feature)
-			  (format "%.3f" millis)))))
+           with order = 0
+           do (cl-incf order)
+           collect (list order
+                         (vector
+                          (format "%.3f" (sanityinc/time-subtract-millis start-time before-init-time))
+                          (symbol-name feature)
+                          (format "%.3f" millis)))))
 
 
 (defun sanityinc/require-times ()
@@ -100,7 +100,7 @@ LOAD-DURATION is the time taken in milliseconds to load FEATURE.")
 (defun sanityinc/show-init-time ()
   "Common function that prints the initialization time of Emacs."
   (message "init completed in %.2fms"
-	   (sanityinc/time-subtract-millis after-init-time before-init-time)))
+           (sanityinc/time-subtract-millis after-init-time before-init-time)))
 
 (add-hook 'after-init-hook 'sanityinc/show-init-time)
 ;; Benchmarking:1 ends here
@@ -137,7 +137,7 @@ LOAD-DURATION is the time taken in milliseconds to load FEATURE.")
         inferior-lisp
         isearch
         lsp-mode
-	mwheel
+        mwheel
         nxml-mode
         use-package
         uniquify
@@ -271,7 +271,7 @@ If there is no region, the current line will be duplicated."
   (interactive "p")
   (save-excursion
     (if (region-active-p)
-	(hpl/duplicate-region arg)
+        (hpl/duplicate-region arg)
       (hpl/duplicate-current-line arg))))
 
 (defun hpl/duplicate-region (num &optional start end)
@@ -280,8 +280,8 @@ If not START and END are provided, the current region-beginning and
 region-end are used. Adds the duplicated text to the kill ring."
   (interactive "p")
   (let* ((start (or start (region-beginning)))
-	 (end (or end (region-end)))
-	 (region (buffer-substring start end)))
+         (end (or end (region-end)))
+         (region (buffer-substring start end)))
     (kill-ring-save start end)
     (goto-char start)
     (dotimes (i num)
@@ -339,20 +339,20 @@ region-end are used. Adds the duplicated text to the kill ring."
   (interactive)
   (if (point-is-in-string-p)
       (let ((old-quotes (char-to-string (hpl/current-quotes-char)))
-	    (new-quotes (char-to-string (hpl/alternate-quotes-char)))
-	    (start (make-marker))
-	    (end (make-marker)))
-	(save-excursion
-	  (hpl/move-point-forward-out-of-string)
-	  (backward-delete-char 1)
-	  (set-marker end (point))
-	  (insert new-quotes)
-	  (hpl/move-point-backward-out-of-string)
-	  (delete-char 1)
-	  (insert new-quotes)
-	  (set-marker start (point))
-	  (replace-string new-quotes (concat "\\" new-quotes) nil start end)
-	  (replace-string (concat "\\" old-quotes) old-quotes nil start end)))
+            (new-quotes (char-to-string (hpl/alternate-quotes-char)))
+            (start (make-marker))
+            (end (make-marker)))
+        (save-excursion
+          (hpl/move-point-forward-out-of-string)
+          (backward-delete-char 1)
+          (set-marker end (point))
+          (insert new-quotes)
+          (hpl/move-point-backward-out-of-string)
+          (delete-char 1)
+          (insert new-quotes)
+          (set-marker start (point))
+          (replace-string new-quotes (concat "\\" new-quotes) nil start end)
+          (replace-string (concat "\\" old-quotes) old-quotes nil start end)))
     (error "Point isn't in a string")))
 
 ;; bind-keys-from-table
@@ -389,11 +389,11 @@ region-end are used. Adds the duplicated text to the kill ring."
   "Add every non-hidden subdir of PARENT-DIR to `load-path'."
   (let ((default-directory parent-dir))
     (setq load-path
-	  (append
-	   (cl-remove-if-not
-	    #'file-directory-p
-	    (directory-files (expand-file-name parent-dir) t "^[^\\.]"))
-	   load-path))))
+          (append
+           (cl-remove-if-not
+            #'file-directory-p
+            (directory-files (expand-file-name parent-dir) t "^[^\\.]"))
+           load-path))))
 
 ;; Add both site-lisp and its immediate subdirs to `load-path'
 (let ((site-lisp-dir (expand-file-name "site-lisp/" user-emacs-directory)))
@@ -432,8 +432,8 @@ under ~/.emacs.d/site-lisp/NAME"
 ;;; --- Setup exec-path to help Emacs find packages
 
 (when (or (memq window-system '(mac ns x pgtk))
-	  (unless (memq system-type '(ms-dos windows-nt))
-	    (daemonp)))
+          (unless (memq system-type '(ms-dos windows-nt))
+            (daemonp)))
   (use-package exec-path-from-shell
     :ensure t
     :pin melpa-stable
@@ -475,8 +475,8 @@ Selectively runs either `after-make-console-frame-hooks' or
 `after-make-window-system-frame-hooks'."
   (with-selected-frame frame
     (run-hooks (if window-system
-		   'after-make-window-system-frame-hooks
-		 'after-make-console-frame-hooks))))
+                   'after-make-window-system-frame-hooks
+                 'after-make-console-frame-hooks))))
 
 (add-hook 'after-make-frame-functions 'run-after-make-frame-hooks)
 
@@ -484,8 +484,8 @@ Selectively runs either `after-make-console-frame-hooks' or
   "The frame (if any) active during Emacs initialization.")
 
 (add-hook 'after-init-hook
-	  (lambda () (when sanityinc/initial-frame
-		       (run-after-make-frame-hooks sanityinc/initial-frame))))
+          (lambda () (when sanityinc/initial-frame
+                       (run-after-make-frame-hooks sanityinc/initial-frame))))
 ;; Frame Hooks:1 ends here
 
 ;; [[file:README.org::*XTerm][XTerm:1]]
@@ -504,7 +504,7 @@ Selectively runs either `after-make-console-frame-hooks' or
 (add-hook 'after-make-console-frame-hooks 'sanityinc/console-frame-setup)
 ;; XTerm:1 ends here
 
-;; [[file:README.org::*Fonts][Fonts:1]]
+;; [[file:README.org::*FontMs][FontMs:1]]
 ;;; --- Fonts
 (if *is-macos*
     (progn
@@ -606,10 +606,10 @@ Selectively runs either `after-make-console-frame-hooks' or
 
 ;; disable line numbers where they don't make sense or arent useful.
 (dolist (mode '(org-mode-hook
-		term-mode-hook
-		treemacs-mode-hook
-		dired-mode-hook
-		eshell-mode-hook))
+                term-mode-hook
+                treemacs-mode-hook
+                dired-mode-hook
+                eshell-mode-hook))
   (add-hook mode (lambda () (display-line-numbers-mode nil))))
 ;; UI Elements:1 ends here
 
@@ -649,7 +649,7 @@ Selectively runs either `after-make-console-frame-hooks' or
 
 ;; Window size and features
 (setq-default window-resize-pixelwise t
-	      frame-resize-pixelwise t)
+              frame-resize-pixelwise t)
 
 (when (fboundp 'tool-bar-mode)
   (tool-bar-mode -1))
@@ -685,8 +685,8 @@ Selectively runs either `after-make-console-frame-hooks' or
 
   ;; Make mouse wheel / trackpad scrolling less jerky
   (setq mouse-wheel-scroll-amount '(1
-				    ((shift) . 5)
-				    ((control))))
+                                    ((shift) . 5)
+                                    ((control))))
   (dolist (multiple '("" "double-" "triple-"))
     (dolist (direction '("right" "left"))
       (global-set-key (read-kbd-macro (concat "<" multiple "wheel-" "direction" ">")) 'ignore)))
@@ -710,17 +710,17 @@ Selectively runs either `after-make-console-frame-hooks' or
   (catch 'quit
     (save-window-excursion
       (let (done)
-	(when (and buffer-file-name (buffer-modified-p))
-	  (while (not done)
-	    (let ((response (read-char-choice
-			     (format "Save file %s? (y, n, d, q) " (buffer-file-name))
-			     '(?y ?n ?d ?q))))
-	      (setq done (cond
-			  ((eq response ?q) (throw 'quit nil))
-			  ((eq response ?y) (save-buffer) t)
-			  ((eq response ?n) (set-buffer-modified-p nil) t)
-			  ((eq response ?d) (diff-buffer-with-file) nil))))))
-	(kill-buffer (current-buffer))))))
+        (when (and buffer-file-name (buffer-modified-p))
+          (while (not done)
+            (let ((response (read-char-choice
+                             (format "Save file %s? (y, n, d, q) " (buffer-file-name))
+                             '(?y ?n ?d ?q))))
+              (setq done (cond
+                          ((eq response ?q) (throw 'quit nil))
+                          ((eq response ?y) (save-buffer) t)
+                          ((eq response ?n) (set-buffer-modified-p nil) t)
+                          ((eq response ?d) (diff-buffer-with-file) nil))))))
+        (kill-buffer (current-buffer))))))
 
 (global-set-key [s-tab] 'next-buffer)
 (global-set-key [S-s-iso-lefttab] 'previous-buffer)
@@ -762,7 +762,7 @@ Selectively runs either `after-make-console-frame-hooks' or
 (use-package mwheel
   :ensure nil ;; builtin
   :config (setq mouse-wheel-scroll-amount '(2 ((shift) . 1))
-		mouse-wheel-progressive-speed nil))
+                mouse-wheel-progressive-speed nil))
 ;; Mouse / Trackpad:1 ends here
 
 ;; [[file:README.org::*File Management][File Management:1]]
@@ -791,10 +791,10 @@ Selectively runs either `after-make-console-frame-hooks' or
   (when *is-macos*
     (let ((gls (executable-find "gls")))
       (if gls
-	  (setq insert-directory-program gls
-		dired-use-ls-dired t
-		dired-listing-switches "-aBhl --group-directories-first")
-	(setq dired-use-ls-dired nil)))))
+          (setq insert-directory-program gls
+                dired-use-ls-dired t
+                dired-listing-switches "-aBhl --group-directories-first")
+        (setq dired-use-ls-dired nil)))))
 ;; dired:1 ends here
 
 ;; [[file:README.org::*isearch][isearch:1]]
@@ -804,8 +804,8 @@ Selectively runs either `after-make-console-frame-hooks' or
   "Invoke `consult-line' from isearch."
   (interactive)
   (let ((query (if isearch-regexp
-		   isearch-string
-		 (regexp-quote isearch-string))))
+                   isearch-string
+                 (regexp-quote isearch-string))))
     (isearch-update-ring isearch-string isearch-regexp)
     (let (search-nonincremental-instead)
       (ignore-errors (isearch-done t t)))
@@ -818,11 +818,11 @@ Selectively runs either `after-make-console-frame-hooks' or
   (interactive)
   (let ((sym (thing-at-point 'symbol)))
     (if sym
-	(progn
-	  (setq isearch-regexp t
-		isearch-string (concat "\\_<" (regexp-quote sym) "\\_>")
-		isearch-message (mapconcat 'isearch-text-char-description isearch-string "")
-		isearch-yank-flag t))
+        (progn
+          (setq isearch-regexp t
+                isearch-string (concat "\\_<" (regexp-quote sym) "\\_>")
+                isearch-message (mapconcat 'isearch-text-char-description isearch-string "")
+                isearch-yank-flag t))
       (ding)))
   (isearch-search-and-update))
 
@@ -843,8 +843,8 @@ Selectively runs either `after-make-console-frame-hooks' or
 
   :init
   (setq-default isearch-allow-scroll t
-		lazy-highlight-cleanup nil
-		lazy-highlight-initial-delay 0))
+                lazy-highlight-cleanup nil
+                lazy-highlight-initial-delay 0))
 
 
 ;; Exits at the bottom of the marked text
@@ -862,7 +862,7 @@ This is useful when followed by an immediate kill."
 ;;; --- Settings for grep and grep-like tools
 
 (setq-default grep-highlight-matched t
-	      grep-scroll-output t)
+              grep-scroll-output t)
 
 (when *is-macos*
   (setq-default locate-command "mdfind"))
@@ -891,9 +891,9 @@ This is useful when followed by an immediate kill."
 (use-package uniquify
   :config
   (setq uniquify-buffer-name-style 'reverse
-	uniquify-separator " • "
-	uniquify-after-kill-buffer-p t
-	uniquify-ignore-buffers-re "^\\*"))
+        uniquify-separator " • "
+        uniquify-after-kill-buffer-p t
+        uniquify-ignore-buffers-re "^\\*"))
 ;; uniquify:1 ends here
 
 ;; [[file:README.org::*flymake][flymake:1]]
@@ -903,10 +903,10 @@ This is useful when followed by an immediate kill."
   :ensure nil
   :hook (prog-mode . flymake-mode)
   :bind (:map flymake-mode-map
-	      ("C-c l" . flymake-show-buffer-diagnostics)
-	      ("C-c n" . flymake-goto-next-error)
-	      ("C-c p" . flymake-goto-prev-error)
-	      ("C-c c" . flymake-start)))
+              ("C-c l" . flymake-show-buffer-diagnostics)
+              ("C-c n" . flymake-goto-next-error)
+              ("C-c p" . flymake-goto-prev-error)
+              ("C-c c" . flymake-start)))
 ;; flymake:1 ends here
 
 ;; [[file:README.org::*xref][xref:1]]
@@ -916,9 +916,9 @@ This is useful when followed by an immediate kill."
   :straight t
   :defer t
   :bind (("s-[" . #'xref-go-back)
-	 ("s-]" . #'xref-go-forward)
-	 ("C-c r" . #'xref-find-references)
-	 ("C-c d" . #'xref-find-definitions))
+         ("s-]" . #'xref-go-forward)
+         ("C-c r" . #'xref-find-references)
+         ("C-c d" . #'xref-find-definitions))
   :config (add-to-list 'xref-prompt-for-identifier #'xref-find-references 'append)
   :custom
   (xref-auto-jump-to-first-xref t))
@@ -950,9 +950,9 @@ This is useful when followed by an immediate kill."
   (lsp-ui-doc-background ((t (:background nil))))
   (lsp-ui-doc-header ((t (:inherit (font-lock-string-face italic)))))
   :bind (:map lsp-ui-mode-map
-	      ([remap xref-find-definitions] . lsp-ui-peek-find-definitions)
-	      ([remap xref-find-references] . lsp-ui-peek-find-references)
-	      ("C-c u" . lsp-ui-imenu))
+              ([remap xref-find-definitions] . lsp-ui-peek-find-definitions)
+              ([remap xref-find-references] . lsp-ui-peek-find-references)
+              ("C-c u" . lsp-ui-imenu))
   :custom
   (lsp-ui-doc-enable t)
   (lsp-ui-doc-header t)
@@ -980,13 +980,13 @@ This is useful when followed by an immediate kill."
   :init (recentf-mode)
   :config
   (setq recentf-max-saved-items 200
-	recentf-auto-cleanup 300
-	recentf-exclude (list "\\.git/.*\\'"  ; Git contents
-			      "/elpa/.*\\'"   ; Package files
-			      ".*\\.gz\\'"
-			      "TAGS"
-			      (concat package-user-dir "/.*-autoloads\\.el\\'")
-			      "ido.last")))
+        recentf-auto-cleanup 300
+        recentf-exclude (list "\\.git/.*\\'"  ; Git contents
+                              "/elpa/.*\\'"   ; Package files
+                              ".*\\.gz\\'"
+                              "TAGS"
+                              (concat package-user-dir "/.*-autoloads\\.el\\'")
+                              "ido.last")))
 ;; recentf:1 ends here
 
 ;; [[file:README.org::*minibuffer][minibuffer:1]]
@@ -1031,32 +1031,32 @@ This is useful when followed by an immediate kill."
 
   :config
   (setq hippie-expand-try-functions-list
-	'(;; Try to expand word "dynamically", searching just the current buffer
-	  try-expand-dabbrev
-	  ;; Try to expand word "dynamically", searching ...?
-	  try-expand-dabbrev-visible
-	  ;; Try to expand word "dynamically", searching all other buffers.
-	  try-expand-dabbrev-all-buffers
-	  ;; Try to expand word "dynamically", searching the kill ring
-	  try-expand-dabbrev-from-kill
-	  ;; Try to complete text as a filename, as many characters are unique
-	  try-complete-file-name-partially
-	  ;; Try to complete text as a filename.
-	  try-complete-file-name
-	  ;; Try to complete before point according to all abbrev tables.
-	  try-expand-all-abbrevs
-	  ;; Try to complete the current line to a list in the buffer
-	  try-expand-list
-	  ;; Try to complete the current line to a line in the buffer
-	  try-expand-line
-	  ;; Try to complete the current line to an entire line in a different buffer.
-	  try-expand-line-all-buffers
-	  ;; Try to complete text using flyspell
-	  ;try-flyspell
-	  ;; Try to complete as an Emacs Lisp symbol, as many characters are unique.
-	  try-complete-lisp-symbol-partially
-	  ;; Try to complete word as an Emacs Lisp symbol.
-	  try-complete-lisp-symbol)))
+        '(;; Try to expand word "dynamically", searching just the current buffer
+          try-expand-dabbrev
+          ;; Try to expand word "dynamically", searching ...?
+          try-expand-dabbrev-visible
+          ;; Try to expand word "dynamically", searching all other buffers.
+          try-expand-dabbrev-all-buffers
+          ;; Try to expand word "dynamically", searching the kill ring
+          try-expand-dabbrev-from-kill
+          ;; Try to complete text as a filename, as many characters are unique
+          try-complete-file-name-partially
+          ;; Try to complete text as a filename.
+          try-complete-file-name
+          ;; Try to complete before point according to all abbrev tables.
+          try-expand-all-abbrevs
+          ;; Try to complete the current line to a list in the buffer
+          try-expand-list
+          ;; Try to complete the current line to a line in the buffer
+          try-expand-line
+          ;; Try to complete the current line to an entire line in a different buffer.
+          try-expand-line-all-buffers
+          ;; Try to complete text using flyspell
+          ;try-flyspell
+          ;; Try to complete as an Emacs Lisp symbol, as many characters are unique.
+          try-complete-lisp-symbol-partially
+          ;; Try to complete word as an Emacs Lisp symbol.
+          try-complete-lisp-symbol)))
 ;; hippie-expand:1 ends here
 
 ;; [[file:README.org::*corfu][corfu:1]]
@@ -1112,7 +1112,7 @@ This is useful when followed by an immediate kill."
   (setq switch-window-threshold 2)
   (setq switch-window-shortcut-style 'qwerty)
   (setq switch-window-qwerty-shortcuts
-	'("a" "s" "d" "f" "g" "h" "i" "j" "k"))
+        '("a" "s" "d" "f" "g" "h" "i" "j" "k"))
   :bind
   (;; TODO: validate these
    ("C-x 0" . switch-window-then-delete)
@@ -1148,21 +1148,21 @@ This is useful when followed by an immediate kill."
 (defun sanityinc/desktop-time-restore (orig &rest args)
   (let ((start-time (current-time)))
     (prog1
-	(apply orig args)
+        (apply orig args)
       (message "Desktop restored in %.2fms"
-	       (sanityinc/time-subtract-millis (current-time)
-					       start-time)))))
+               (sanityinc/time-subtract-millis (current-time)
+                                               start-time)))))
 (advice-add 'desktop-read :around 'sanityinc/desktop-time-restore)
 
 (defun sanityinc/desktop-time-buffer-create (orig ver filename &rest args)
   (let ((start-time (current-time)))
     (prog1
-	(apply orig ver filename args)
+        (apply orig ver filename args)
       (message "Desktop: %.2fms to restore %s"
-	       (sanityinc/time-subtract-millis (current-time)
-					       start-time)
-	       (when filename
-		 (abbreviate-file-name filename))))))
+               (sanityinc/time-subtract-millis (current-time)
+                                               start-time)
+               (when filename
+                 (abbreviate-file-name filename))))))
 (advice-add 'desktop-create-buffer :around 'sanityinc/desktop-time-buffer-create)
 
 ;; Restore histories and registers after saving
@@ -1178,16 +1178,16 @@ This is useful when followed by an immediate kill."
   (add-hook 'after-init-hook 'session-initialize)
 
   (setq desktop-globals-to-save
-	'((compile-history      . 30)
-	  (dired-regexp-history . 20)
-	  (file-name-history    . 100)
-	  (grep-find-history    . 30)
-	  (grep-history         . 30)
-	  (minibuffer-history   . 50)
-	  (org-tags-history     . 50)
-	  (regexp-history       . 60)
-	  (regexp-search-ring   . 20)
-	  (search-ring          . 20))))
+        '((compile-history      . 30)
+          (dired-regexp-history . 20)
+          (file-name-history    . 100)
+          (grep-find-history    . 30)
+          (grep-history         . 30)
+          (minibuffer-history   . 50)
+          (org-tags-history     . 50)
+          (regexp-history       . 60)
+          (regexp-search-ring   . 20)
+          (search-ring          . 20))))
 ;; sessions:1 ends here
 
 ;;; --- Multiple Major Modes support
@@ -1198,8 +1198,8 @@ This is useful when followed by an immediate kill."
   :config
   (setq mmm-global-mode 'buffers-with-submode-classes)
   (setq mmm-submode-mode-line-format "~M > [~m]"
-	mmm-primary-mode-display-name t
-	mmm-buffer-mode-display-name t)
+        mmm-primary-mode-display-name t
+        mmm-buffer-mode-display-name t)
   (setq mmm-submode-decoration-level 3)
 
   ;;(mmm-add-mode-ext-classes 'html-mode "\\.php\\'" 'html-php)
@@ -1230,12 +1230,12 @@ This is useful when followed by an immediate kill."
 
 ;; Advises kill-region "C-w" so that if no region is selected, it kills/copies the current line.
 (advice-add 'kill-region :before
-	    (lambda (&rest args)
-	      "When called interactively with no active region, kill a single line instead."
-	      (when (called-interactively-p 'interactive)
-		(unless mark-active
-		  (setq args (list (line-beginning-position)
-				   (line-beginning-position 2)))))))
+            (lambda (&rest args)
+              "When called interactively with no active region, kill a single line instead."
+              (when (called-interactively-p 'interactive)
+                (unless mark-active
+                  (setq args (list (line-beginning-position)
+                                   (line-beginning-position 2)))))))
 ;; editing-utils:1 ends here
 
 ;; [[file:README.org::*whitespace][whitespace:1]]
@@ -1244,8 +1244,8 @@ This is useful when followed by an immediate kill."
 ;; Show whitespace issues
 (use-package whitespace
   :diminish (global-whitespace-mode
-	     whitespace-mode
-	     whitespace-newline-mode)
+             whitespace-mode
+             whitespace-newline-mode)
   :bind
   ("C-c T w" . whitespace-mode)
   :hook
@@ -1253,20 +1253,20 @@ This is useful when followed by an immediate kill."
 
   :config
   (setq whitespace-line-column 120
-	whitespace-style '(face
-			   tabs
-			   indent
-			   tab-mark
-			   empty
-			   trailing
-			   lines-tail)))
+        whitespace-style '(face
+                           tabs
+                           indent
+                           tab-mark
+                           empty
+                           trailing
+                           lines-tail)))
 
 (use-package whitespace-cleanup-mode
   :ensure t
   :diminish whitespace-cleanup-mode
 
   :bind (("C-c T W" . whitespace-cleanup-mode)
-	 ("C-c e w" . whitespace-cleanup))
+         ("C-c e w" . whitespace-cleanup))
 
   :hook
   (prog-mode . whitespace-cleanup-mode)
@@ -1287,18 +1287,18 @@ This is useful when followed by an immediate kill."
   :ensure t
   :after (dired)
   :hook ((prog-mode  . diff-hl-mode)
-	 (dired-mode . diff-hl-dired-mode)
-	 (after-init . global-diff-hl-mode))
+         (dired-mode . diff-hl-dired-mode)
+         (after-init . global-diff-hl-mode))
   :init
   (defconst hplogsdon/diff-hl-mode-hooks '(emacs-lisp-mode-hook
-					   conf-space-mode-hook ; .tmux.conf
-					   markdown-mode-hook
-					   css-mode-hook
-					   web-mode-hook
-					   sh-mode-hook
-					   python-mode-hook
-					   yaml-mode-hook ; tmuxp yaml configs
-					   c-mode-hook)
+                                           conf-space-mode-hook ; .tmux.conf
+                                           markdown-mode-hook
+                                           css-mode-hook
+                                           web-mode-hook
+                                           sh-mode-hook
+                                           python-mode-hook
+                                           yaml-mode-hook ; tmuxp yaml configs
+                                           c-mode-hook)
     "List of hook of major modes in which `diff-hl-mode' should be enabled.")
   (dolist (hook hplogsdon/diff-hl-mode-hooks)
     (add-hook hook #'diff-hl-flydiff-mode))
@@ -1323,7 +1323,7 @@ This is useful when followed by an immediate kill."
 
 (use-package vc
   :bind (("C-x v =" . hplogsdon/vc-diff)
-	 ("C-x v H" . vc-region-history)) ;; new command in emacs 25.x
+         ("C-x v H" . vc-region-history)) ;; new command in emacs 25.x
   :config
   (defun hplogsdon/vc-diff (no-whitespace)
     "Call `vc-diff' as usual if buffer is not modified.
@@ -1332,21 +1332,21 @@ This is useful when followed by an immediate kill."
   all whitespace when doing diff."
     (interactive "P")
     (let* ((no-ws-switch '("-w"))
-	   (vc-git-diff-switches (if no-whitespace
-				     no-ws-switch
-				   vc-git-diff-switches))
-	   (vc-diff-switches (if no-whitespace
-				 no-ws-switch
-			       vc-diff-switches))
-	   (diff-switches (if no-whitespace
-			      no-ws-switch
-			    vc-diff-switches))
-	   ;; set `current-prefix-arg' no nil so that the HISTORIC arg of
-	   ;; `vc-diff' stays nil.
-	   current-prefix-arg)
+           (vc-git-diff-switches (if no-whitespace
+                                     no-ws-switch
+                                   vc-git-diff-switches))
+           (vc-diff-switches (if no-whitespace
+                                 no-ws-switch
+                               vc-diff-switches))
+           (diff-switches (if no-whitespace
+                              no-ws-switch
+                            vc-diff-switches))
+           ;; set `current-prefix-arg' no nil so that the HISTORIC arg of
+           ;; `vc-diff' stays nil.
+           current-prefix-arg)
       (if (buffer-modified-p)
-	  (diff-buffer-with-file (current-buffer))
-	(call-interactively #'vc-diff)))))
+          (diff-buffer-with-file (current-buffer))
+        (call-interactively #'vc-diff)))))
 ;; Version Control:1 ends here
 
 ;; [[file:README.org::*git][git:1]]
@@ -1386,21 +1386,21 @@ This is useful when followed by an immediate kill."
 (use-package magit
   :ensure t
   :bind (("C-x g" . magit-status)
-	 :map magit-status-mode-map
-	 ("C-x C-k" . hpl/magit-kill-file-on-line)
-	 ("q" . hpl/magit-quit-session)
-	 ("W" . hpl/magit-toggle-whitespace))
+         :map magit-status-mode-map
+         ("C-x C-k" . hpl/magit-kill-file-on-line)
+         ("q" . hpl/magit-quit-session)
+         ("W" . hpl/magit-toggle-whitespace))
 
   :config
   (progn
     (setq magit-auto-revert-mode nil)
     (setq magit-repository-directories '("~/Projects/"))
 
-    ;(defadvice magit-status (around magit-fullscreen activate)
-    ;  (unless (get-register :magit-fullscreen)
-    ;    (window-configuration-to-register :magit-fullscreen))
-    ;  ad-to-it
-    ;  (delete-other-windows))
+                                        ;(defadvice magit-status (around magit-fullscreen activate)
+                                        ;  (unless (get-register :magit-fullscreen)
+                                        ;    (window-configuration-to-register :magit-fullscreen))
+                                        ;  ad-to-it
+                                        ;  (delete-other-windows))
 
     (defun hpl/magit-kill-file-on-line ()
       ""
@@ -1420,8 +1420,8 @@ This is useful when followed by an immediate kill."
       ""
       (interactive)
       (if (member "-w" magit-diff-options)
-	  (hpl/magit-dont-ignore-whitespace)
-	(hpl/magit-ignore-whitespace)))
+          (hpl/magit-dont-ignore-whitespace)
+        (hpl/magit-ignore-whitespace)))
 
     (defun hpl/magit-dont-ignore-whitespace ()
       ""
@@ -1464,8 +1464,8 @@ This is useful when followed by an immediate kill."
   :ensure nil
   :bind (("C-x C-b" . ibuffer))
   :commands (ibuffer-current-buffer
-	     ibuffer-find-file
-	     ibuffer-do-sort-by-alphabetic)
+             ibuffer-find-file
+             ibuffer-do-sort-by-alphabetic)
 
   :preface
   (defvar protected-buffers '("*scratch*" "*Messages*")
@@ -1474,7 +1474,7 @@ This is useful when followed by an immediate kill."
     "Protect some buffers from being killed."
     (dolist (buffer protected-buffers)
       (with-current-buffer buffer
-	(emacs-lock-mode 'kill))))
+        (emacs-lock-mode 'kill))))
   :init
   (use-package ibuffer-vc
     :commands (ibuffer-vc-set-filter-groups-by-vc-root)
@@ -1483,29 +1483,29 @@ This is useful when followed by an immediate kill."
 
   (setq ibuffer-filter-group-name-face '(:inherit (font-lock-string-face bold)))
   (setq ibuffer-formats '((mark modified read-only locked
-				" " (name 35 35 :left :elide)
-				" " (size 9 -1 :right)
-				" " (mode 16 16 :left :elide)
-				" " filename-and-process)
-			  (mark modified read-only vc-status-mini
-				" " (name 22 22 :left :elide)
-				" " (size 9 -1 :right)
-				" " (mode 14 14 :left :elide)
-				" " (vc-status 12 12 :left)
-				" " vc-relative-file)
-			  (mark " " (name 16 -1) " " filename)))
+                                " " (name 35 35 :left :elide)
+                                " " (size 9 -1 :right)
+                                " " (mode 16 16 :left :elide)
+                                " " filename-and-process)
+                          (mark modified read-only vc-status-mini
+                                " " (name 22 22 :left :elide)
+                                " " (size 9 -1 :right)
+                                " " (mode 14 14 :left :elide)
+                                " " (vc-status 12 12 :left)
+                                " " vc-relative-file)
+                          (mark " " (name 16 -1) " " filename)))
   (setq ibuffer-saved-filter-groups '(("default"
-				       ("org" (or (mode .org-mode) (name . "^\\Org Mode")))
-				       ("emacs" (or (name . "^\\*scratch\\*$") (name . "\\*Messages\\*$")))
-				       ("dired" (mode . dired-mode))
-				       ("terminal" (name . "^\\*Help\\*$")))))
+                                       ("org" (or (mode .org-mode) (name . "^\\Org Mode")))
+                                       ("emacs" (or (name . "^\\*scratch\\*$") (name . "\\*Messages\\*$")))
+                                       ("dired" (mode . dired-mode))
+                                       ("terminal" (name . "^\\*Help\\*$")))))
   (hplogsdon/protected-buffers)
   :config
   (add-hook 'ibuffer-mode-hook
-	    (lambda ()
-	      (ibuffer-switch-to-saved-filter-groups "default")
-	      (ibuffer-update nil t)
-	      (ibuffer-auto-mode 1)))
+            (lambda ()
+              (ibuffer-switch-to-saved-filter-groups "default")
+              (ibuffer-update nil t)
+              (ibuffer-auto-mode 1)))
 
 
   (setq ibuffer-show-empty-filter-groups nil))
@@ -1529,26 +1529,26 @@ This is useful when followed by an immediate kill."
   :config
   (projectile-global-mode 1)
   (setq projectile-enable-caching t
-	projectile-create-missing-test-files t
-	;;projectile-completion-system 'ivy
-	projectile-mode-line-prefix " Proj"
-	projectile-mode-line '(:eval (projectile-project-name))
-	projectile-use-git-grep t
-	projectile-commander-methods nil))
+        projectile-create-missing-test-files t
+        ;;projectile-completion-system 'ivy
+        projectile-mode-line-prefix " Proj"
+        projectile-mode-line '(:eval (projectile-project-name))
+        projectile-use-git-grep t
+        projectile-commander-methods nil))
 
 
 (use-package ibuffer-projectile
   :after (projectile)
   :bind
   (:map ibuffer-mode-map
-	("c" . clean-buffer-list)
-	("n" . ibuffer-forward-filter-group)
-	("p" . ibuffer-backwards-filter-group))
+        ("c" . clean-buffer-list)
+        ("n" . ibuffer-forward-filter-group)
+        ("p" . ibuffer-backwards-filter-group))
   :hook
   ((ibuffer . (lambda ()
-		(ibuffer-projectile-set-filter-groups)
-		(unless (eq ibuffer-sorting-mode 'alphabetic)
-		  (ibuffer-do-sort-by-alphabetic))))))
+                (ibuffer-projectile-set-filter-groups)
+                (unless (eq ibuffer-sorting-mode 'alphabetic)
+                  (ibuffer-do-sort-by-alphabetic))))))
 ;; projectile:1 ends here
 
 ;; [[file:README.org::*markdown][markdown:1]]
@@ -1573,15 +1573,16 @@ This is useful when followed by an immediate kill."
   :mode ("\\.org\\'" . org-mode)
   :defer t
   :bind (("C-c a" . org-agenda)
-	 ("C-c c" . org-capture)
-	;("C-c j" . org-journal)
-	 (:map org-mode-map
-	       (("M-p" . outline-previous-visible-heading)
-		("M-n" . outline-next-visible-heading)
-		("C-c C-p" . eaf-org-export-to-pdf-and-open)
-		("C-c ;" . nil))))
+         ("C-c c" . org-capture)
+                                        ;("C-c j" . org-journal)
+         (:map org-mode-map
+               (("M-p" . outline-previous-visible-heading)
+                ("M-n" . outline-next-visible-heading)
+                ("C-c C-p" . eaf-org-export-to-pdf-and-open)
+                ("C-c ;" . nil))))
 
   :custom
+  (org-directory "~/OneDrive/org/")
   (org-return-follows-link t)
   (org-export-backends (quote (ascii html latex md odt)))
   (org-confirm-babel-evaluate 'nil)
@@ -1596,32 +1597,38 @@ This is useful when followed by an immediate kill."
   (org-todo-keywords
    '((sequence "TODO(t)" "NEXT(n)" "|" "DONE(d)")
      (sequence "WAITING(w@/!)" "HOLD(h@/!)" "|" "CANCELLED(c@/!)")))
+  (org-ellipses "  ")
 
   :custom-face
   (org-agenda-current-time ((t (:foreground "spring green"))))
 
   :hook ((org-mode . (lambda ()
-		       (set-face-attribute 'org-level-1 nil :height 1.4)
-		       (set-face-attribute 'org-level-2 nil :height 1.3)
-		       (set-face-attribute 'org-level-3 nil :height 1.2)
-		       (set-face-attribute 'org-level-4 nil :height 1.1)
-		       (set-face-attribute 'org-level-5 nil :height 1.1))))
+                       (set-face-attribute 'org-level-1 nil :height 1.4)
+                       (set-face-attribute 'org-level-2 nil :height 1.3)
+                       (set-face-attribute 'org-level-3 nil :height 1.2)
+                       (set-face-attribute 'org-level-4 nil :height 1.1)
+                       (set-face-attribute 'org-level-5 nil :height 1.1)))
+         (org-mode . (lambda ()
+                       (push '("TODO"      . ?▲) prettify-symbols-alist)
+                       (push '("NEXT"      . ?➜) prettify-symbols-alist)
+                       (push '("DONE"      . ?✓) prettify-symbols-alist)
+                       (push '("CANCELLED" . ?✘) prettify-symbols-alist))))
 
   :config
   (unless (version<= org-version "9.2")
     (require 'org-tempo))
 
-  (when (or (file-directory-p "~/org/agenda") (file-directory-p "~/org/journal"))
-    (setq org-agenda-files (list "~/org/agenda" "~/org/journal"))))
+  (when (or (file-directory-p "~/OneDrive/org/agenda.org") (file-directory-p "~/OneDrive/org/journal"))
+    (setq org-agenda-files (list "~/OneDrive/org/agenda.org" "~/OneDrive/org/journal"))))
 
 (use-package org-journal
   :bind (("C-c j n" . org-journal-new-entry)
-	 ("C-c j t" . hpl/org-journal-today))
+         ("C-c j t" . hpl/org-journal-today))
 
   :custom
   (org-journal-date-prefix "#+TITLE: ")
   (org-journal-file-format "%Y-%m-%d.org")
-  (org-journal-dir "~/org/journal")
+  (org-journal-dir "~/OneDrive/org/journal")
   (org-journal-date-format "%Y-%m-%d")
 
   :config
@@ -1715,30 +1722,30 @@ This is useful when followed by an immediate kill."
   (save-excursion
     (end-of-line)
     (condition-case nil
-	(printc (concat " ; -> " (pp-to-string (eval (preceding-sexp))))
-		(current-buffer))
+        (printc (concat " ; -> " (pp-to-string (eval (preceding-sexp))))
+                (current-buffer))
       (error (message "Invalid expression")))))
 
 (defun hplogsdon/elisp-eval-region ()
   (interactive)
   (if (region-active-p)
       (progn
-	(eval-region (region-beginning)
-		     (region-end))
-	(deactivate-mark))
+        (eval-region (region-beginning)
+                     (region-end))
+        (deactivate-mark))
     (eval-expression)))
 
 (defun hplogsdon/elisp-headerize ()
   "Adds a header and footer to an elisp buffer for Flycheck"
   (interactive)
   (let ((fname (if (buffer-file-name)
-		   (file-name-nondirectory (buffer-file-name))
-		 (error "This buffer is not visiting a file"))))
+                   (file-name-nondirectory (buffer-file-name))
+                 (error "This buffer is not visiting a file"))))
     (save-excursion
       (goto-char (point-min))
       (insert ";;; " fname " --- Description -*- lexical-binding: t -*-\n"
-	      ";;; Commentary:\n"
-	      ";;; Code:\n\n")
+              ";;; Commentary:\n"
+              ";;; Code:\n\n")
       (goto-char (point-max))
       (insert ";;; " fname " ends here\n"))))
 
@@ -1746,16 +1753,16 @@ This is useful when followed by an immediate kill."
   "If you're saving an elisp file, the .elc is likely invalid."
   (make-local-variable 'after-save-hook)
   (add-hook 'after-save-hook
-	    '(lambda ()
-	       (when (file-exists-p (concat buffer-file-name "c"))
-		 (delete-file (concat buffer-file-name "c"))))))
+            '(lambda ()
+               (when (file-exists-p (concat buffer-file-name "c"))
+                 (delete-file (concat buffer-file-name "c"))))))
 
 (use-package emacs-lisp-mode
   :defer t
   :diminish "λ"
   :hook ((emacs-lisp-mode . outline-minor-mode)
-	 (emacs-lisp-mode . reveal-mode)
-	 (emacs-lisp-mode . eldoc-mode))
+         (emacs-lisp-mode . reveal-mode)
+         (emacs-lisp-mode . eldoc-mode))
   :bind (("C-x e" . hplogsdon/elisp-eval-and-comment-output))
   :mode (("\\.el$" . emacs-lisp-mode))
   :init
@@ -1781,14 +1788,14 @@ This is useful when followed by an immediate kill."
          ("\\.cljs$"  . clojurescript-mode)
          ("\\.edn$"   . clojure-mode)
          ("lein-env$" . clojure-mode))
-	 :config
-	 (use-package align-cljlet
-	   :bind (:map clojure-mode-map
-                       ("C-! a a" . align-cljlet)
-                       :map clojurescript-mode-map
-                       ("C-! a a" . align-cljlet)
-                       :map clojurec-mode-map
-                       ("C-! a a" . align-cljlet))))
+  :config
+  (use-package align-cljlet
+    :bind (:map clojure-mode-map
+                ("C-! a a" . align-cljlet)
+                :map clojurescript-mode-map
+                ("C-! a a" . align-cljlet)
+                :map clojurec-mode-map
+                ("C-! a a" . align-cljlet))))
 ;; Clojure Mode:1 ends here
 
 ;; [[file:README.org::*Clojure Refactor][Clojure Refactor:1]]
@@ -1800,51 +1807,51 @@ This is useful when followed by an immediate kill."
     (clj-refactor-mode 1))
   (add-hook 'clojure-mode-hook #'hpl/clj-refactor-mode-hook)
   (setq cljr-clojure-test-declaration "[clojure.test :refer :all]"
-	cljr-cljs-clojure-test-declaration "[cljs.test :refer-macros [deftest is use-fixtures]]")
+        cljr-cljs-clojure-test-declaration "[cljs.test :refer-macros [deftest is use-fixtures]]")
   :config
   (cljr-add-keybindings-with-prefix "<menu>")
   (add-to-list 'cljr-magic-require-namespaces
-	       '("s" . "clojure.spec.alpha")))
+               '("s" . "clojure.spec.alpha")))
 ;; Clojure Refactor:1 ends here
 
 ;; [[file:README.org::*CIDER][CIDER:1]]
 (use-package cider
   :bind (:map cider-repl-mode-map
-	 ("M-r" . cider-refresh)
-	 ("C-c r" . cider-repl-reset)
-	 ("M-R" . hpl/cider-user-repl-tools)
-	 :map clojure-mode-map
-	 ("C-M-r" . hpl/cider-refresh)
-	 ("C-c C-v" . hpl/cider-start-http-server)
-	 ("C-c u" . hpl/cider-user-ns)
-	 :map cider-mode-map
-	 ("C-c u" . hpl/cider-user-ns))
+              ("M-r" . cider-refresh)
+              ("C-c r" . cider-repl-reset)
+              ("M-R" . hpl/cider-user-repl-tools)
+              :map clojure-mode-map
+              ("C-M-r" . hpl/cider-refresh)
+              ("C-c C-v" . hpl/cider-start-http-server)
+              ("C-c u" . hpl/cider-user-ns)
+              :map cider-mode-map
+              ("C-c u" . hpl/cider-user-ns))
   
   :hook
   (;; Enable paredit in the cider REPL
    ;;(cider-mode . paredit-mode)
    ;; Provides minibuffer docs when writing to the REPL
-   (cider-mode . cider-turn-on-eldoc-mode))  
+   (cider-mode . cider-turn-on-eldoc-mode))
   
   :config
   (setq nrepl-hide-special-buffers t
-	nrepl-popup-stacktraces-in-repl t
-	nrepl-history-file "~/.emacs.d/nrepl-history"
+        nrepl-popup-stacktraces-in-repl t
+        nrepl-history-file "~/.emacs.d/nrepl-history"
 
-	cider-mode-line " CIDER"
-	cider-repl-display-in-current-window t
-	;; Where to store cider history
-	cider-repl-history-file "~/.emacs.d/.cider-repl-history"
-	;; Go right to the REPL when it connects
-	cider-repl-pop-to-buffer-on-connect t
-	;; When there is a cider error, show its buffer and switch to it
-	cider-show-error-buffer nil
-	cider-auto-select-error-buffer nil
-	;; wrap when navigating history
-	cider-repl-wrap-history t
-	
-	cider-repl-use-pretty-printing t
-	cider-cljs-lein-repl "(do (use 'figwheel-sidecar.repl-api) (start-figwheel!) (cljs-repl))")
+        cider-mode-line " CIDER"
+        cider-repl-display-in-current-window t
+        ;; Where to store cider history
+        cider-repl-history-file "~/.emacs.d/.cider-repl-history"
+        ;; Go right to the REPL when it connects
+        cider-repl-pop-to-buffer-on-connect t
+        ;; When there is a cider error, show its buffer and switch to it
+        cider-show-error-buffer nil
+        cider-auto-select-error-buffer nil
+        ;; wrap when navigating history
+        cider-repl-wrap-history t
+        
+        cider-repl-use-pretty-printing t
+        cider-cljs-lein-repl "(do (use 'figwheel-sidecar.repl-api) (start-figwheel!) (cljs-repl))")
 
   (defun hpl/cider-use-repl-tools ()
     (interactive)
@@ -1865,19 +1872,19 @@ This is useful when followed by an immediate kill."
 
   (defun hpl/cider-user-ns ()
     (interactive)
-    (cider-repl-set-ns "user"))        
+    (cider-repl-set-ns "user"))
 
   (fset 'cider-eval-last-sexp-and-comment
-	"\C-u\C-x\C-e\C-a\260 ;; \C-e")
+        "\C-u\C-x\C-e\C-a\260 ;; \C-e")
 
   (bind-key "C-j" 'cider-eval-last-sexp-and-comment clojure-mode-map)
 
   ;; this snippet comes from schmir https://github.com/schmir/.emacs.d/blob/master/lisp/setup-clojure.el
   (advice-add 'cider-load-buffer :after
-	      (lambda (&rest _)
-		"Switch to namespace"
-		(cider-repl-set-ns (cider-current-ns))
-		(cider-switch-to-repl-buffer)))
+              (lambda (&rest _)
+                "Switch to namespace"
+                (cider-repl-set-ns (cider-current-ns))
+                (cider-switch-to-repl-buffer)))
 
   ;; Fix cond indenting
   (put 'cond 'clojure-backtracking-indent '(2 4 2 4 2 4 2 4 2 4 2 4 2 4 2 4 2 4 2 4 2 4 2 4 2 4 2 4 2 4 2 4 2 4 2 4 2 4 2 4 2 4 2 4 2 4 2 4 2 4)))
@@ -1905,9 +1912,9 @@ This is useful when followed by an immediate kill."
 (use-package dashboard
   :config
   (setq dashboard-startup-banner 'logo
-	dashboard-banner-logo-title "EMACS!"
-	dashboard-items nil
-	dashboard-set-footer nil))
+        dashboard-banner-logo-title "EMACS!"
+        dashboard-items nil
+        dashboard-set-footer nil))
 ;; Dashboard:1 ends here
 
 ;;; --- Terminals in Emacs
@@ -1945,10 +1952,10 @@ This is useful when followed by an immediate kill."
 ;; [[file:README.org::*Footer][Footer:1]]
 ;; Allow access from emacsclient
 (add-hook 'after-init-hook
-	  (lambda ()
-	    (require 'server)
-	    (unless (server-running-p)
-	      (server-start))))
+          (lambda ()
+            (require 'server)
+            (unless (server-running-p)
+              (server-start))))
 
 (when (file-exists-p custom-file)
   (load custom-file))
