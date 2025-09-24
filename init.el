@@ -171,6 +171,7 @@ LOAD-DURATION is the time taken in milliseconds to load FEATURE.")
         lsp-mode
         mwheel
         nxml-mode
+        org-agenda
         use-package
         uniquify
         vc
@@ -1540,18 +1541,14 @@ This is useful when followed by an immediate kill."
   :mode ("\\.\\(csv\\|tsv\\)\\'"))
 ;; csv:1 ends here
 
-;; [[file:README.org::*javascript][javascript:1]]
-
-;; javascript:1 ends here
-
-;; [[file:README.org::*orgmode][orgmode:1]]
+;; [[file:README.org::*org-mode][org-mode:1]]
 (use-package org
   :pin "orgmode"
   :mode ("\\.org\\'" . org-mode)
   :defer t
   :bind (("C-c a" . org-agenda)
          ("C-c c" . org-capture)
-                                        ;("C-c j" . org-journal)
+					;("C-c j" . org-journal)
          (:map org-mode-map
                (("M-p" . outline-previous-visible-heading)
                 ("M-n" . outline-next-visible-heading)
@@ -1560,24 +1557,41 @@ This is useful when followed by an immediate kill."
 
   :custom
   (org-directory "~/OneDrive/org/")
+  (org-default-notes-file "~/OneDrive/org/tasks.org")
   (org-return-follows-link t)
   (org-export-backends (quote (ascii html latex md odt)))
   (org-confirm-babel-evaluate 'nil)
   (org-deadline-warning-days 7)
-  (org-agenda-window-setup 'other-window)
   (org-babel-load-languages
    '((emacs-lisp . t)
      (python . t)
+     (org . t)
+     (sql . t)
      (dot . t)))
   (org-log-done 'time)
   (org-log-into-drawer t)
   (org-todo-keywords
    '((sequence "TODO(t)" "NEXT(n)" "|" "DONE(d)")
      (sequence "WAITING(w@/!)" "HOLD(h@/!)" "|" "CANCELLED(c@/!)")))
+  (org-todo-keyword-faces
+   '(("TODO" :foreground "lime green" :weight bold)
+     ("NEXT" :foreground "cyan" :weight bold)
+     ("DONE" :foreground "dim gray" :weigth bold)
+     ("WAITING" :foreground "red3" :weight bold)
+     ("HOLD" :foreground "magenta" :weight bold)
+     ("CANCELLED" :foreground "dim gray" :weight bold)))
   (org-ellipses "  ")
 
-  :custom-face
-  (org-agenda-current-time ((t (:foreground "spring green"))))
+  :config
+  (setq org-startup-indexed t)
+  (setq org-capture-templates
+	'(("t" "todo" entry (file+headline org-default-notes-file "Tasks")
+	   "* TODO %i%? \n:PROPERTIES: \n:CREATED: %U \n:END: \n " :prepend t :clock-keep t)
+	  ("l" "todo with link" entry (file+headline org-default-notes-file "Tasks")
+	   "* TODO %A \n:PROPERTIES: \n:CREATED: %U \n::END: \n " :prepend t)
+	  ("m" "meeting" entry (file org-default-notes-file)
+	   "* Meeting w/ %? \n :MEETING: \n %U" :clock-keep t)))
+
 
   :hook ((org-mode . (lambda ()
                        (set-face-attribute 'org-level-1 nil :height 1.4)
@@ -1596,11 +1610,16 @@ This is useful when followed by an immediate kill."
     (require 'org-tempo))
 
   (when (or (file-directory-p "~/OneDrive/org/agenda.org") (file-directory-p "~/OneDrive/org/journal"))
-    (setq org-agenda-files (list "~/OneDrive/org/agenda.org" "~/OneDrive/org/journal"))))
+    (let ((journal-entries (directory-files-recursively "~/OneDrive/org/journal/" "\\.org$")))
+      (setq org-agenda-files (cons "~/OneDrive/org/agenda.org" journal-entries)))))
+;; org-mode:1 ends here
 
+;; [[file:README.org::*org-journal][org-journal:1]]
 (use-package org-journal
   :bind (("C-c j n" . org-journal-new-entry)
-         ("C-c j t" . hpl/org-journal-today))
+         ("C-c j t" . hpl/org-journal-today)
+         ("C-c j y" . hpl/org-journal-yesterday)
+	 ("C-c j a" . org-journal-new-scheduled-entry))
 
   :custom
   (org-journal-date-prefix "#+TITLE: ")
@@ -1610,14 +1629,69 @@ This is useful when followed by an immediate kill."
 
   :config
   (defun hpl/org-journal-today ()
+    "Creates or loads a journal file for today's date."
     (interactive)
-    (org-journal-new-entry t)))
-;; orgmode:1 ends here
+    (let ((today-name (format-time-string org-journal-file-format)))
+      (find-file
+       (expand-file-name
+        (concat (file-name-as-directory org-journal-dir) today-name)))))
 
-;; [[file:README.org::*Java][Java:1]]
-(use-package lsp-java
-  :hook (java-mode . lsp-deferred))
-;; Java:1 ends here
+  (defun hpl/org-journal-yesterday ()
+    (interactive)
+    (let ((yesterday-name (format-time-string
+                           org-journal-file-format
+                           (time-subtract (current-time) (days-to-time 1)))))
+      (find-file
+       (expand-file-name
+        (concat (file-name-as-directory org-journal-dir) yesterday-name))))))
+;; org-journal:1 ends here
+
+;; [[file:README.org::*org-journal-tags][org-journal-tags:1]]
+(use-package org-journal-tags
+  :straight t
+  :after (org-journal)
+  :custom
+  (org-agenda-dim-blocked-tasks t)
+  (org-agenda-skip-deadline-if-done t)
+  (org-agenda-inhibit-startup t)
+  (org-agenda-show-log t)
+  (org-agenda-skip-deadline-prewarning-if-scheduled 'pre-scheduled)
+  (org-agenda-window-setup 'other-window)
+  (org-agenda-skip-scheduled-if-done t)
+  (org-agenda-span 5)
+  (org-agenda-start-day "-2d")
+  (org-agenda-start-on-weekday nil)
+  (org-agenda-sticky nil)
+  (org-agenda-tags-column 100)
+  (org-agenda-time-grid '((daily today required-timed)))
+  (org-agenda-use-tag-inheritance t)
+
+  :config
+  (org-journal-tags-autosync-mode))
+;; org-journal-tags:1 ends here
+
+;; [[file:README.org::*org-agenda][org-agenda:1]]
+(use-package org-agenda
+  :ensure nil
+  :after (org-journal)
+  :custom-face
+  (org-agenda-current-time ((t (:foreground "spring green")))))
+;; org-agenda:1 ends here
+
+;; [[file:README.org::*org-alert][org-alert:1]]
+(use-package org-alert
+  :ensure t
+  :config
+  (setq org-alert-interval 60
+	org-alert-notify-cutoff 5
+	org-alert-notify-after-event-cutoff 2)
+  (org-alert-enable))
+
+(use-package alert
+  :config
+  (setq alert-default-style 'osx-notifier
+	alert-fade-time 120))
+;; org-alert:1 ends here
 
 ;; [[file:README.org::*nxml][nxml:1]]
 (use-package nxml-mode
@@ -1627,18 +1701,9 @@ This is useful when followed by an immediate kill."
   )
 ;; nxml:1 ends here
 
-;; [[file:README.org::*python][python:1]]
-(use-package python-mode
-  :straight nil ;; builtin
-  :init
-  (setq auto-mode-list '("\\.py\\'" . python-mode))
-  (autoload 'python-mode "python-mode" "Python Mode." t)
-  :hook ((python-mode . pyenv-mode)
-         (python-mode . company-mode))
-  :config
-  (setq python-shell-interpreter "python3"
-	python-shell-interpreter-args "-i"))
-;; python:1 ends here
+;; [[file:README.org::*toml][toml:1]]
+
+;; toml:1 ends here
 
 ;; [[file:README.org::*yaml][yaml:1]]
 (use-package yaml-mode
@@ -1656,10 +1721,93 @@ This is useful when followed by an immediate kill."
   :mode "Dockerfile\\'")
 ;; docker:1 ends here
 
+;; [[file:README.org::*terraform][terraform:1]]
+(use-package terraform-mode
+  :ensure t
+  :defer t)
+;; terraform:1 ends here
+
 ;; [[file:README.org::*ini Files][ini Files:1]]
 (use-package ini-mode
   :mode "\\.ini\\'")
 ;; ini Files:1 ends here
+
+;; [[file:README.org::*Java][Java:1]]
+(use-package lsp-java
+  :hook (java-mode . lsp-deferred))
+;; Java:1 ends here
+
+;; [[file:README.org::*Java][Java:2]]
+
+;; Java:2 ends here
+
+;; [[file:README.org::*Base config][Base config:1]]
+(use-package python-mode
+  :straight nil ;; builtin
+  :mode ("\\.py" . python-mode)
+  :init
+  (setq auto-mode-list '("\\.py\\'" . python-mode))
+  (autoload 'python-mode "python-mode" "Python Mode." t)
+  :hook ((python-mode . pyenv-mode)
+         (python-mode . company-mode))
+  :config
+  (setq python-shell-interpreter "python3"
+        python-shell-interpreter-args "-i"))
+;; Base config:1 ends here
+
+;; [[file:README.org::*elpy][elpy:1]]
+(use-package elpy
+  :after (python-mode)
+
+  :init
+  (setq auto-mode-list '("\\.py\\'" . python-mode))
+
+  :config
+  (setq elpy-rpc-backend "jedi")
+
+  :bind
+  (:map elpy-mode-map
+        ("M-." . elpy-goto-definition)))
+;; elpy:1 ends here
+
+;; [[file:README.org::*pyenv][pyenv:1]]
+(use-package pyenv-mode
+  :config
+  (defun hpl/pyenv-activate-current-project ()
+    "Automatically activates pyenv version if .python-version file exists."
+    (interactive)
+    (let ((python-version-directory (locate-dominating-file (buffer-file-name) ".python-version")))
+      (if python-version-directory
+	  (let* ((pyenv-version-path (f-expand ".python-version" python-version-directory))
+		 (pyenv-current-version (s-trim (f-read-text pyenv-version-path 'utf-8))))
+	    (pyenv-mode-set pyenv-current-version)
+	    (message (concat "Setting virtualenv to " pyenv-current-version))))))
+
+  (defvar hpl/pyenv-current-version nil nil)
+
+  (defun hpl/pyenv-init ()
+    "Initialize pyenv's current version to the global one."
+    (let ((global-pyenv (replace-regexp-in-string "\n" "" (shell-command-to-string "pyenv global"))))
+      (message (concat "Setting pyenv version to " global-pyenv))
+      (pyenv-mode-set global-pyenv)
+      (setq hpl/pyenv-current-version global-pyenv)))
+
+  :hook
+  ((after-init . hpl/pyenv-init))
+
+  :bind
+  (:map pyenv-mode-map
+	("C-c C-s" . nil)))
+;; pyenv:1 ends here
+
+;; [[file:README.org::*sql][sql:1]]
+(use-package sqlformat
+  :hook (sql-mode . sqlformat-on-save-mode)
+
+  :custom
+  (sqlformat-command 'pgformatter)
+  (setq sqlformat-args '("-s2" "-g")))
+;; sql:1 ends here
 
 ;; [[file:README.org::*Rainbow Parens][Rainbow Parens:1]]
 (show-paren-mode 1)
