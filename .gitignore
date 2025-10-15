@@ -115,3 +115,8 @@ Temporary Items
 .apdisk
 custom-vars.el
 /.projectile-bookmarks
+/custom.el
+/projects
+transient/
+bookmarks/
+/bookmarks

@@ -26,6 +26,8 @@
 ;; you want `find-file` to start somewhere other than ~ it needs to be here in
 ;; your early-init file.
 (defvar user-project-dir "~/Projects/")
-(setq default-directory user-project-dir)
+(setq default-directory user-project-dir
+      ;; Keep cruft out of ~/.emacs.d
+      user-emacs-directory "~/.cache/emacs")
 
 ;; end early-init.el

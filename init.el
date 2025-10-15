@@ -955,7 +955,9 @@ This is useful when followed by an immediate kill."
   :after (:all xref)
   :commands (lsp lsp-deferred)
   :hook ((prog-mode . lsp-deferred))
-
+  :bind (:map lsp-mode-map
+	      ("TAB" . completion-at-point))
+  
   :custom
   (lsp-enable-folding nil)
   (lsp-enable-links nil)
@@ -1702,7 +1704,9 @@ This is useful when followed by an immediate kill."
 ;; nxml:1 ends here
 
 ;; [[file:README.org::*toml][toml:1]]
-
+(use-package toml-mode
+  :ensure t
+  :mode ("\\.toml\\'" . toml-mode))
 ;; toml:1 ends here
 
 ;; [[file:README.org::*yaml][yaml:1]]
@@ -1742,62 +1746,23 @@ This is useful when followed by an immediate kill."
 ;; Java:2 ends here
 
 ;; [[file:README.org::*Base config][Base config:1]]
-(use-package python-mode
-  :straight nil ;; builtin
-  :mode ("\\.py" . python-mode)
+(use-package python
+  :after flycheck
   :init
-  (setq auto-mode-list '("\\.py\\'" . python-mode))
-  (autoload 'python-mode "python-mode" "Python Mode." t)
-  :hook ((python-mode . pyenv-mode)
-         (python-mode . company-mode))
+  (setq indent-tabs-mode nil)
   :config
   (setq python-shell-interpreter "python3"
-        python-shell-interpreter-args "-i"))
+        python-shell-interpreter-args "-i"
+	dap-python-execurable "python3"
+	dap-python-debugger 'debugpy))
 ;; Base config:1 ends here
-
-;; [[file:README.org::*elpy][elpy:1]]
-(use-package elpy
-  :after (python-mode)
-
-  :init
-  (setq auto-mode-list '("\\.py\\'" . python-mode))
-
-  :config
-  (setq elpy-rpc-backend "jedi")
-
-  :bind
-  (:map elpy-mode-map
-        ("M-." . elpy-goto-definition)))
-;; elpy:1 ends here
 
 ;; [[file:README.org::*pyenv][pyenv:1]]
 (use-package pyenv-mode
+  :ensure t
+  :init (add-to-list 'exec-path "~/.pyenv/shims")
   :config
-  (defun hpl/pyenv-activate-current-project ()
-    "Automatically activates pyenv version if .python-version file exists."
-    (interactive)
-    (let ((python-version-directory (locate-dominating-file (buffer-file-name) ".python-version")))
-      (if python-version-directory
-	  (let* ((pyenv-version-path (f-expand ".python-version" python-version-directory))
-		 (pyenv-current-version (s-trim (f-read-text pyenv-version-path 'utf-8))))
-	    (pyenv-mode-set pyenv-current-version)
-	    (message (concat "Setting virtualenv to " pyenv-current-version))))))
-
-  (defvar hpl/pyenv-current-version nil nil)
-
-  (defun hpl/pyenv-init ()
-    "Initialize pyenv's current version to the global one."
-    (let ((global-pyenv (replace-regexp-in-string "\n" "" (shell-command-to-string "pyenv global"))))
-      (message (concat "Setting pyenv version to " global-pyenv))
-      (pyenv-mode-set global-pyenv)
-      (setq hpl/pyenv-current-version global-pyenv)))
-
-  :hook
-  ((after-init . hpl/pyenv-init))
-
-  :bind
-  (:map pyenv-mode-map
-	("C-c C-s" . nil)))
+  (pyenv-mode 1))
 ;; pyenv:1 ends here
 
 ;; [[file:README.org::*sql][sql:1]]

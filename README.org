@@ -1,4 +1,5 @@
 #+HTML_HEAD:   <link rel="stylesheet" type="text/css" href="//dotfiles-abcdefg.gitlab.io/css/org.css"/>
+#+header-args: :results silent :tangle yes
 
 #+NAME: bindings-from-table
 #+BEGIN_SRC emacs-lisp :noweb yes :exports none :results silent pp :tangle no :var table=()
@@ -26,12 +27,15 @@
 #+END_SRC
 
 
-#+TITLE:       Emacs
+#+TITLE:       Emacs Configuration
 #+AUTHOR:      Howard Logsdon
 #+EMAIL:       (concat "howard" at-sign "hplogsdon.com")
 #+DESCRIPTION: Emacs configuration
 #+LANGUAGE:    en
 #+OPTIONS:     toc:2
+:PROPERTIES:
+:header-args: :results silent :tangle yes
+:END:
 
 * Emacs
 
@@ -130,7 +134,9 @@ This bootstraps a number of things that should be set before we start installing
   ;; you want `find-file` to start somewhere other than ~ it needs to be here in
   ;; your early-init file.
   (defvar user-project-dir "~/Projects/")
-  (setq default-directory user-project-dir)
+  (setq default-directory user-project-dir
+        ;; Keep cruft out of ~/.emacs.d
+        user-emacs-directory "~/.cache/emacs")
 
   ;; end early-init.el
 #+END_SRC
@@ -1372,7 +1378,9 @@ languages that we'd like to use.
     :after (:all xref)
     :commands (lsp lsp-deferred)
     :hook ((prog-mode . lsp-deferred))
-
+    :bind (:map lsp-mode-map
+  	      ("TAB" . completion-at-point))
+    
     :custom
     (lsp-enable-folding nil)
     (lsp-enable-links nil)
@@ -2346,7 +2354,8 @@ among MANY others.
 
 #+END_SRC
 
-***** TODO nxml
+***** DONE nxml
+CLOSED: [2025-10-15 Wed 09:51]
 
 To manage XML files, we use =nxml-mode= package built in to Emacs with LemMinX LSP server.
 To use it, we need to ensure the LSP mode is installed.
@@ -2360,12 +2369,17 @@ To use it, we need to ensure the LSP mode is installed.
 
 #+END_SRC
 
-***** TODO toml
+***** DONE toml
+CLOSED: [2025-10-15 Wed 09:51]
 
 #+BEGIN_SRC emacs-lisp :tangle init.el :comments link
+  (use-package toml-mode
+    :ensure t
+    :mode ("\\.toml\\'" . toml-mode))
 #+END_SRC
 
-***** TODO yaml
+***** DONE yaml
+CLOSED: [2025-10-15 Wed 09:52]
 
 #+BEGIN_SRC emacs-lisp :tangle init.el :comments link
   (use-package yaml-mode
@@ -2379,7 +2393,8 @@ To use it, we need to ensure the LSP mode is installed.
 
 #+END_SRC
 
-***** TODO docker
+***** DONE docker
+CLOSED: [2025-10-15 Wed 09:52]
 
 To support Dockerfiles with LSP, the package =dockerfile-mode= with dockerfile-language-server-nodejs
 (=dockerfile-ls=) is enough. To use it, do not forget to configure the LSP package and to  install this
@@ -2391,7 +2406,8 @@ LSP server through LSP-mode or with a system package manager.
 
 #+END_SRC
 
-***** TODO terraform
+***** DONE terraform
+CLOSED: [2025-10-15 Wed 09:52]
 
 #+BEGIN_SRC emacs-lisp :tangle init.el :comments link
   (use-package terraform-mode
@@ -2400,7 +2416,8 @@ LSP server through LSP-mode or with a system package manager.
 
 #+END_SRC
 
-***** ini Files
+***** DONE ini Files
+CLOSED: [2025-10-15 Wed 09:53]
 
 INI files are ubiquitous.
 
@@ -2437,67 +2454,26 @@ This can be altered with =lsp-java-server-install-dir=.
 ****** Base config
 
 #+BEGIN_SRC emacs-lisp :tangle init.el :comments link
-  (use-package python-mode
-    :straight nil ;; builtin
-    :mode ("\\.py" . python-mode)
+  (use-package python
+    :after flycheck
     :init
-    (setq auto-mode-list '("\\.py\\'" . python-mode))
-    (autoload 'python-mode "python-mode" "Python Mode." t)
-    :hook ((python-mode . pyenv-mode)
-           (python-mode . company-mode))
+    (setq indent-tabs-mode nil)
     :config
     (setq python-shell-interpreter "python3"
-          python-shell-interpreter-args "-i"))
-#+END_SRC
-
-****** elpy
-
-#+BEGIN_SRC emacs-lisp :tangle init.el :comments link
-  (use-package elpy
-    :after (python-mode)
-
-    :init
-    (setq auto-mode-list '("\\.py\\'" . python-mode))
-
-    :config
-    (setq elpy-rpc-backend "jedi")
-
-    :bind
-    (:map elpy-mode-map
-          ("M-." . elpy-goto-definition)))
-
+          python-shell-interpreter-args "-i"
+  	dap-python-execurable "python3"
+  	dap-python-debugger 'debugpy))
 #+END_SRC
 
 ****** pyenv
 
 #+BEGIN_SRC emacs-lisp :tangle init.el :comments link
   (use-package pyenv-mode
+    :ensure t
+    :init (add-to-list 'exec-path "~/.pyenv/shims")
     :config
-    (defun hpl/pyenv-activate-current-project ()
-      "Automatically activates pyenv version if .python-version file exists."
-      (interactive)
-      (let ((python-version-directory (locate-dominating-file (buffer-file-name) ".python-version")))
-        (if python-version-directory
-  	  (let* ((pyenv-version-path (f-expand ".python-version" python-version-directory))
-  		 (pyenv-current-version (s-trim (f-read-text pyenv-version-path 'utf-8))))
-  	    (pyenv-mode-set pyenv-current-version)
-  	    (message (concat "Setting virtualenv to " pyenv-current-version))))))
+    (pyenv-mode 1))
 
-    (defvar hpl/pyenv-current-version nil nil)
-
-    (defun hpl/pyenv-init ()
-      "Initialize pyenv's current version to the global one."
-      (let ((global-pyenv (replace-regexp-in-string "\n" "" (shell-command-to-string "pyenv global"))))
-        (message (concat "Setting pyenv version to " global-pyenv))
-        (pyenv-mode-set global-pyenv)
-        (setq hpl/pyenv-current-version global-pyenv)))
-
-    :hook
-    ((after-init . hpl/pyenv-init))
-
-    :bind
-    (:map pyenv-mode-map
-  	("C-c C-s" . nil)))
 
 #+END_SRC
 
